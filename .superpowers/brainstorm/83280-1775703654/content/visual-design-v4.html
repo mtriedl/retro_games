@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { background: #1a1a2e; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 20px; font-family: system-ui; color: #e0e0e0; }
+  h2 { margin: 0 0 8px; }
+  .subtitle { color: #999; margin: 0 0 20px; font-size: 14px; }
+  .game-frame { border: 2px solid #444; position: relative; }
+  .notes { max-width: 640px; margin-top: 20px; padding: 16px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 13px; line-height: 1.7; }
+  .notes h3 { margin: 0 0 8px; font-size: 15px; }
+  .notes ul { margin: 4px 0; padding-left: 20px; }
+</style>
+</head>
+<body>
+
+<h2>Visual Design v4: Faithful Proportions</h2>
+<p class="subtitle">Fixed 640px width, 11 buildings, flat sky, sun with rays</p>
+
+<!-- DAY VERSION -->
+<div class="game-frame" style="width:640px;height:400px;background:#0000AA;overflow:hidden;position:relative;font-family:'Courier New',monospace;">
+
+  <!-- Sun with rays (centered, near top) -->
+  <svg style="position:absolute;top:15px;left:50%;transform:translateX(-50%);z-index:5;" width="50" height="50" viewBox="0 0 50 50">
+    <!-- Rays -->
+    <line x1="25" y1="0" x2="25" y2="8" stroke="#FFD700" stroke-width="2"/>
+    <line x1="25" y1="42" x2="25" y2="50" stroke="#FFD700" stroke-width="2"/>
+    <line x1="0" y1="25" x2="8" y2="25" stroke="#FFD700" stroke-width="2"/>
+    <line x1="42" y1="25" x2="50" y2="25" stroke="#FFD700" stroke-width="2"/>
+    <line x1="7" y1="7" x2="13" y2="13" stroke="#FFD700" stroke-width="2"/>
+    <line x1="37" y1="7" x2="43" y2="13" stroke="#FFD700" stroke-width="2" transform="rotate(0,40,10)"/>
+    <line x1="7" y1="43" x2="13" y2="37" stroke="#FFD700" stroke-width="2"/>
+    <line x1="37" y1="43" x2="43" y2="37" stroke="#FFD700" stroke-width="2"/>
+    <!-- Face -->
+    <circle cx="25" cy="25" r="14" fill="#FFEE44"/>
+    <!-- Eyes -->
+    <circle cx="20" cy="22" r="2" fill="#886600"/>
+    <circle cx="30" cy="22" r="2" fill="#886600"/>
+    <!-- Smile -->
+    <path d="M 19 28 Q 25 34 31 28" stroke="#886600" stroke-width="2" fill="none"/>
+  </svg>
+
+  <!-- Player labels & input -->
+  <div style="position:absolute;top:8px;left:12px;color:#fff;font-size:14px;font-weight:bold;z-index:10;">Player 1</div>
+  <div style="position:absolute;top:26px;left:12px;color:#fff;font-size:13px;z-index:10;">Angle: <span style="border-bottom:2px solid #fff;padding:0 2px;">65</span></div>
+  <div style="position:absolute;top:42px;left:12px;color:#888;font-size:11px;z-index:10;">(last: 60 / 50)</div>
+
+  <div style="position:absolute;top:8px;right:12px;color:#fff;font-size:14px;font-weight:bold;z-index:10;text-align:right;">Player 2</div>
+
+  <!-- Score at bottom center -->
+  <div style="position:absolute;bottom:18px;left:50%;transform:translateX(-50%);color:#fff;font-size:13px;z-index:10;background:#000088;border:1px solid #5555ff;padding:1px 8px;">2>Score&lt;1</div>
+
+  <!-- Wind arrow at very bottom -->
+  <div style="position:absolute;bottom:4px;left:50%;transform:translateX(-50%);color:#ff5555;font-size:12px;z-index:10;">&#9668;&#9668;&#9668;</div>
+
+  <!-- Building 1: Red, short -->
+  <div style="position:absolute;bottom:0;left:0;width:58px;height:160px;background:#AA0000;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px 4px;padding:6px 5px;">
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+    </div>
+  </div>
+
+  <!-- Building 2: Cyan, tall (Gorilla 1) -->
+  <div style="position:absolute;bottom:0;left:60px;width:62px;height:250px;background:#00AAAA;">
+    <!-- Gorilla P1 -->
+    <svg style="position:absolute;top:-28px;left:50%;transform:translateX(-50%);" width="24" height="28" viewBox="0 0 24 28">
+      <rect x="8" y="0" width="8" height="6" fill="#CC8833"/>
+      <rect x="6" y="6" width="12" height="10" fill="#CC8833"/>
+      <rect x="0" y="6" width="6" height="4" fill="#CC8833"/>
+      <rect x="18" y="6" width="6" height="4" fill="#CC8833"/>
+      <rect x="2" y="10" width="4" height="6" fill="#CC8833"/>
+      <rect x="18" y="10" width="4" height="6" fill="#CC8833"/>
+      <rect x="8" y="16" width="8" height="6" fill="#CC8833"/>
+      <rect x="8" y="22" width="4" height="6" fill="#CC8833"/>
+      <rect x="12" y="22" width="4" height="6" fill="#CC8833"/>
+      <rect x="10" y="3" width="2" height="2" fill="#fff"/>
+      <rect x="14" y="3" width="2" height="2" fill="#fff"/>
+    </svg>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px 4px;padding:6px 5px;">
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+    </div>
+  </div>
+
+  <!-- Building 3: Cyan, short -->
+  <div style="position:absolute;bottom:0;left:124px;width:55px;height:180px;background:#00AAAA;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px 4px;padding:6px 4px;">
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+    </div>
+  </div>
+
+  <!-- Building 4: Cyan, tall -->
+  <div style="position:absolute;bottom:0;left:181px;width:58px;height:280px;background:#00AAAA;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px 4px;padding:6px 5px;">
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+    </div>
+  </div>
+
+  <!-- Building 5: Red, medium -->
+  <div style="position:absolute;bottom:0;left:241px;width:60px;height:220px;background:#AA0000;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px 4px;padding:6px 5px;">
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+    </div>
+  </div>
+
+  <!-- Building 6: Gray, medium -->
+  <div style="position:absolute;bottom:0;left:303px;width:55px;height:200px;background:#AAAAAA;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px 3px;padding:6px 4px;">
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+    </div>
+  </div>
+
+  <!-- Building 7: Red, tall -->
+  <div style="position:absolute;bottom:0;left:360px;width:58px;height:270px;background:#AA0000;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px 4px;padding:6px 5px;">
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+    </div>
+  </div>
+
+  <!-- Building 8: Cyan, medium -->
+  <div style="position:absolute;bottom:0;left:420px;width:55px;height:210px;background:#00AAAA;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px 3px;padding:6px 4px;">
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+    </div>
+  </div>
+
+  <!-- Building 9: Red, tall (Gorilla 2) -->
+  <div style="position:absolute;bottom:0;left:477px;width:58px;height:240px;background:#AA0000;">
+    <!-- Gorilla P2 -->
+    <svg style="position:absolute;top:-28px;left:50%;transform:translateX(-50%);" width="24" height="28" viewBox="0 0 24 28">
+      <rect x="8" y="0" width="8" height="6" fill="#CC8833"/>
+      <rect x="6" y="6" width="12" height="10" fill="#CC8833"/>
+      <rect x="0" y="6" width="6" height="4" fill="#CC8833"/>
+      <rect x="18" y="6" width="6" height="4" fill="#CC8833"/>
+      <rect x="2" y="10" width="4" height="6" fill="#CC8833"/>
+      <rect x="18" y="10" width="4" height="6" fill="#CC8833"/>
+      <rect x="8" y="16" width="8" height="6" fill="#CC8833"/>
+      <rect x="8" y="22" width="4" height="6" fill="#CC8833"/>
+      <rect x="12" y="22" width="4" height="6" fill="#CC8833"/>
+      <rect x="10" y="3" width="2" height="2" fill="#fff"/>
+      <rect x="14" y="3" width="2" height="2" fill="#fff"/>
+    </svg>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px 4px;padding:6px 5px;">
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+      <div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#555;"></div>
+      <div style="width:7px;height:9px;background:#555;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div><div style="width:7px;height:9px;background:#FFFF55;"></div>
+    </div>
+  </div>
+
+  <!-- Building 10: Gray, short -->
+  <div style="position:absolute;bottom:0;left:537px;width:52px;height:170px;background:#AAAAAA;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px 4px;padding:6px 5px;">
+      <div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#555;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div>
+      <div style="width:8px;height:9px;background:#555;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#555;"></div>
+      <div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div>
+      <div style="width:8px;height:9px;background:#555;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#555;"></div>
+      <div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#555;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div>
+    </div>
+  </div>
+
+  <!-- Building 11: Red, medium-tall -->
+  <div style="position:absolute;bottom:0;left:591px;width:49px;height:230px;background:#AA0000;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px 4px;padding:6px 4px;">
+      <div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#555;"></div>
+      <div style="width:8px;height:9px;background:#555;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div>
+      <div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#555;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div>
+      <div style="width:8px;height:9px;background:#555;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#555;"></div>
+      <div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#555;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div>
+      <div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#555;"></div>
+      <div style="width:8px;height:9px;background:#555;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div>
+      <div style="width:8px;height:9px;background:#555;"></div><div style="width:8px;height:9px;background:#555;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div>
+      <div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#FFFF55;"></div><div style="width:8px;height:9px;background:#555;"></div>
+    </div>
+  </div>
+
+  <!-- Banana projectile in flight -->
+  <div style="position:absolute;top:105px;left:340px;font-size:16px;transform:rotate(40deg);z-index:8;">&#127820;</div>
+
+</div>
+
+<div class="notes">
+  <h3>v4 Changes</h3>
+  <ul>
+    <li><strong>640px fixed width</strong> matching the original's proportions</li>
+    <li><strong>11 buildings</strong> spanning edge-to-edge with varied heights</li>
+    <li><strong>Building colors</strong>: red (#AA0000), cyan (#00AAAA), gray (#AAAAAA) -- the original's EGA palette</li>
+    <li><strong>Flat blue sky</strong> (#0000AA) -- no gradient, faithful to original</li>
+    <li><strong>Sun with rays</strong> (SVG spikes) centered at top, smiley face</li>
+    <li><strong>Pixel-art gorillas</strong> (SVG block shapes) instead of emoji</li>
+    <li><strong>Player labels</strong> top-left and top-right, like original</li>
+    <li><strong>Score at bottom center</strong> in original "2>Score&lt;1" format</li>
+    <li><strong>Wind arrow at very bottom</strong> center</li>
+    <li>Night version: same layout, dark sky (#000033), stars instead of sun, yellow windows glow brighter</li>
+  </ul>
+</div>
+
+</body>
+</html>

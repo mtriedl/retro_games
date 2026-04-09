@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { background: #1a1a2e; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 30px; font-family: 'Courier New', monospace; color: #e0e0e0; }
+  h2 { margin: 0 0 6px; font-family: system-ui; }
+  .subtitle { color: #999; margin: 0 0 24px; font-size: 14px; font-family: system-ui; }
+  .sound-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 600px; width: 100%; }
+  .sound-btn {
+    background: #000044; border: 2px solid #5555ff; color: #55ff55; padding: 16px 20px;
+    cursor: pointer; font-family: 'Courier New', monospace; font-size: 14px;
+    border-radius: 4px; transition: all 0.15s; text-align: left;
+  }
+  .sound-btn:hover { background: #000066; border-color: #7777ff; }
+  .sound-btn:active { background: #000088; transform: scale(0.98); }
+  .sound-btn .label { color: #ffff55; font-weight: bold; margin-bottom: 4px; }
+  .sound-btn .desc { color: #888; font-size: 11px; }
+  .playing { border-color: #55ff55 !important; box-shadow: 0 0 12px rgba(85,255,85,0.3); }
+  .volume-control { margin-bottom: 20px; color: #55ffff; font-size: 13px; }
+  .volume-control input { vertical-align: middle; }
+</style>
+</head>
+<body>
+
+<h2>Sound Test Lab</h2>
+<p class="subtitle">Click each button to preview the synthesized sound</p>
+
+<div class="volume-control">
+  Volume: <input type="range" id="vol" min="0" max="1" step="0.05" value="0.4" style="width:150px;"> <span id="volLabel">40%</span>
+</div>
+
+<div class="sound-grid">
+  <button class="sound-btn" onclick="playSound('launch', this)">
+    <div class="label">&#127820; Banana Launch</div>
+    <div class="desc">Rising whistle tone</div>
+  </button>
+
+  <button class="sound-btn" onclick="playSound('flight', this)">
+    <div class="label">&#128168; Banana Flight</div>
+    <div class="desc">Faint whistling, pitch shifts</div>
+  </button>
+
+  <button class="sound-btn" onclick="playSound('buildingHit', this)">
+    <div class="label">&#128165; Building Hit</div>
+    <div class="desc">Low crunch/thud</div>
+  </button>
+
+  <button class="sound-btn" onclick="playSound('gorillaHit', this)">
+    <div class="label">&#128163; Gorilla Hit</div>
+    <div class="desc">Big explosion + rumble</div>
+  </button>
+
+  <button class="sound-btn" onclick="playSound('victory', this)">
+    <div class="label">&#127942; Victory Jingle</div>
+    <div class="desc">Ascending celebratory notes</div>
+  </button>
+
+  <button class="sound-btn" onclick="playSound('roundStart', this)">
+    <div class="label">&#127916; Round Start</div>
+    <div class="desc">Quick fanfare</div>
+  </button>
+
+  <button class="sound-btn" onclick="playSound('sunMoon', this)">
+    <div class="label">&#9728;&#65039; Sun/Moon Surprise</div>
+    <div class="desc">Comedic boing</div>
+  </button>
+
+  <button class="sound-btn" onclick="playSound('menuSelect', this)">
+    <div class="label">&#9654; Menu Select</div>
+    <div class="desc">Quick click/beep</div>
+  </button>
+
+  <button class="sound-btn" onclick="playSound('miss', this)">
+    <div class="label">&#128168; Miss (Off Screen)</div>
+    <div class="desc">Descending whistle, fading</div>
+  </button>
+
+  <button class="sound-btn" onclick="playSound('type', this)">
+    <div class="label">&#9000; Input Keystroke</div>
+    <div class="desc">Subtle key click</div>
+  </button>
+</div>
+
+<script>
+let audioCtx = null;
+
+function getCtx() {
+  if (!audioCtx) audioCtx = new AudioContext();
+  return audioCtx;
+}
+
+function getVol() {
+  return parseFloat(document.getElementById('vol').value);
+}
+
+document.getElementById('vol').addEventListener('input', function() {
+  document.getElementById('volLabel').textContent = Math.round(this.value * 100) + '%';
+});
+
+function flash(btn) {
+  btn.classList.add('playing');
+  setTimeout(() => btn.classList.remove('playing'), 400);
+}
+
+function playSound(type, btn) {
+  flash(btn);
+  const ctx = getCtx();
+  const vol = getVol();
+
+  switch(type) {
+    case 'launch': {
+      // Rising whistle
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(300, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.25);
+      g.gain.setValueAtTime(vol * 0.5, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      o.connect(g).connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.3);
+
+      // Add a subtle harmonic
+      const o2 = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      o2.type = 'triangle';
+      o2.frequency.setValueAtTime(600, ctx.currentTime);
+      o2.frequency.exponentialRampToValueAtTime(1800, ctx.currentTime + 0.25);
+      g2.gain.setValueAtTime(vol * 0.15, ctx.currentTime);
+      g2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+      o2.connect(g2).connect(ctx.destination);
+      o2.start(); o2.stop(ctx.currentTime + 0.25);
+      break;
+    }
+
+    case 'flight': {
+      // Whistling with vibrato
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      const lfo = ctx.createOscillator();
+      const lfoGain = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(500, ctx.currentTime);
+      o.frequency.linearRampToValueAtTime(400, ctx.currentTime + 1.0);
+      lfo.frequency.value = 8;
+      lfoGain.gain.value = 15;
+      lfo.connect(lfoGain).connect(o.frequency);
+      g.gain.setValueAtTime(vol * 0.2, ctx.currentTime);
+      g.gain.setValueAtTime(vol * 0.2, ctx.currentTime + 0.6);
+      g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.0);
+      o.connect(g).connect(ctx.destination);
+      o.start(); lfo.start();
+      o.stop(ctx.currentTime + 1.0); lfo.stop(ctx.currentTime + 1.0);
+      break;
+    }
+
+    case 'buildingHit': {
+      // Low crunch - noise burst with filter
+      const bufferSize = ctx.sampleRate * 0.15;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1);
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(800, ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.15);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(vol * 0.7, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+      noise.connect(filter).connect(g).connect(ctx.destination);
+      noise.start(); noise.stop(ctx.currentTime + 0.15);
+
+      // Thud
+      const o = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(80, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.2);
+      g2.gain.setValueAtTime(vol * 0.6, ctx.currentTime);
+      g2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+      o.connect(g2).connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.2);
+      break;
+    }
+
+    case 'gorillaHit': {
+      // Big explosion - layered noise + rumble
+      const bufferSize = ctx.sampleRate * 0.6;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1);
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(2000, ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.6);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(vol * 0.8, ctx.currentTime);
+      g.gain.setValueAtTime(vol * 0.5, ctx.currentTime + 0.1);
+      g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+      noise.connect(filter).connect(g).connect(ctx.destination);
+      noise.start(); noise.stop(ctx.currentTime + 0.6);
+
+      // Low rumble
+      const o = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(60, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(20, ctx.currentTime + 0.8);
+      g2.gain.setValueAtTime(vol * 0.5, ctx.currentTime);
+      g2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
+      o.connect(g2).connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.8);
+
+      // Impact crack
+      const o2 = ctx.createOscillator();
+      const g3 = ctx.createGain();
+      o2.type = 'square';
+      o2.frequency.setValueAtTime(200, ctx.currentTime);
+      o2.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.15);
+      g3.gain.setValueAtTime(vol * 0.6, ctx.currentTime);
+      g3.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+      o2.connect(g3).connect(ctx.destination);
+      o2.start(); o2.stop(ctx.currentTime + 0.15);
+      break;
+    }
+
+    case 'victory': {
+      // Ascending major scale jingle
+      const notes = [523, 587, 659, 784, 1047]; // C5 D5 E5 G5 C6
+      const durations = [0.12, 0.12, 0.12, 0.15, 0.35];
+      let time = ctx.currentTime;
+      notes.forEach((freq, i) => {
+        const o = ctx.createOscillator();
+        const o2 = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'square';
+        o.frequency.value = freq;
+        o2.type = 'triangle';
+        o2.frequency.value = freq;
+        g.gain.setValueAtTime(vol * 0.25, time);
+        g.gain.setValueAtTime(vol * 0.25, time + durations[i] * 0.7);
+        g.gain.exponentialRampToValueAtTime(0.01, time + durations[i]);
+        o.connect(g).connect(ctx.destination);
+        o2.connect(g);
+        o.start(time); o.stop(time + durations[i]);
+        o2.start(time); o2.stop(time + durations[i]);
+        time += durations[i];
+      });
+      break;
+    }
+
+    case 'roundStart': {
+      // Quick military-style fanfare
+      const notes = [392, 523, 659, 784]; // G4 C5 E5 G5
+      const durations = [0.1, 0.1, 0.1, 0.25];
+      let time = ctx.currentTime;
+      notes.forEach((freq, i) => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'square';
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(vol * 0.3, time);
+        g.gain.exponentialRampToValueAtTime(0.01, time + durations[i]);
+        o.connect(g).connect(ctx.destination);
+        o.start(time); o.stop(time + durations[i]);
+        time += durations[i];
+      });
+
+      // Drum roll underneath
+      for (let i = 0; i < 6; i++) {
+        const bufSize = ctx.sampleRate * 0.04;
+        const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let j = 0; j < bufSize; j++) d[j] = (Math.random() * 2 - 1);
+        const n = ctx.createBufferSource();
+        n.buffer = buf;
+        const f = ctx.createBiquadFilter();
+        f.type = 'bandpass'; f.frequency.value = 200; f.Q.value = 1;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(vol * 0.25, ctx.currentTime + i * 0.07);
+        g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.07 + 0.04);
+        n.connect(f).connect(g).connect(ctx.destination);
+        n.start(ctx.currentTime + i * 0.07);
+      }
+      break;
+    }
+
+    case 'sunMoon': {
+      // Comedic boing
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(150, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.08);
+      o.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.2);
+      o.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.28);
+      o.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.4);
+      g.gain.setValueAtTime(vol * 0.4, ctx.currentTime);
+      g.gain.setValueAtTime(vol * 0.3, ctx.currentTime + 0.2);
+      g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+      o.connect(g).connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.4);
+
+      // Spring overtone
+      const o2 = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      o2.type = 'triangle';
+      o2.frequency.setValueAtTime(300, ctx.currentTime);
+      o2.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.08);
+      o2.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.2);
+      o2.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.28);
+      o2.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.4);
+      g2.gain.setValueAtTime(vol * 0.15, ctx.currentTime);
+      g2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+      o2.connect(g2).connect(ctx.destination);
+      o2.start(); o2.stop(ctx.currentTime + 0.4);
+      break;
+    }
+
+    case 'menuSelect': {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'square';
+      o.frequency.setValueAtTime(800, ctx.currentTime);
+      o.frequency.setValueAtTime(1000, ctx.currentTime + 0.04);
+      g.gain.setValueAtTime(vol * 0.2, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+      o.connect(g).connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.08);
+      break;
+    }
+
+    case 'miss': {
+      // Descending whistle fading out
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(600, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.6);
+      g.gain.setValueAtTime(vol * 0.35, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+      o.connect(g).connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.6);
+      break;
+    }
+
+    case 'type': {
+      // Subtle key click
+      const bufSize = ctx.sampleRate * 0.02;
+      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) d[i] = (Math.random() * 2 - 1);
+      const n = ctx.createBufferSource();
+      n.buffer = buf;
+      const f = ctx.createBiquadFilter();
+      f.type = 'highpass'; f.frequency.value = 3000;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(vol * 0.15, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.02);
+      n.connect(f).connect(g).connect(ctx.destination);
+      n.start();
+      break;
+    }
+  }
+}
+</script>
+
+</body>
+</html>

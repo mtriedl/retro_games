@@ -1,0 +1,68 @@
+<h2>Architecture Approaches</h2>
+<p class="subtitle">How should we structure the game code?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Single-File Game <span style="opacity:0.5">(Simplest)</span></h3>
+      <p>One HTML file, one JS file, one CSS file. Game state is a plain object. Functions organized by concern (rendering, physics, input, AI) in sections within the file.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Dead simple -- open index.html and play</li>
+          <li>Easy to understand top-to-bottom</li>
+          <li>No module system or bundler</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>One large JS file (~1500-2000 lines)</li>
+          <li>Harder to navigate as it grows</li>
+          <li>All state is global or closure-scoped</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>ES Modules <span style="opacity:0.5">(Recommended)</span></h3>
+      <p>Separate ES module files: <code>game.js</code>, <code>renderer.js</code>, <code>physics.js</code>, <code>ai.js</code>, <code>audio.js</code>, <code>ui.js</code>. Native browser <code>import/export</code> -- no bundler needed. Each module is 200-400 lines.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Clean separation of concerns</li>
+          <li>Each file is focused and readable</li>
+          <li>Still no build step -- browsers support ES modules natively</li>
+          <li>Easier to work with (both for you and for Claude)</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>Must serve from a local server (file:// blocks ES module imports)</li>
+          <li>Slightly more files to manage</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Class-Based ECS <span style="opacity:0.5">(Over-engineered)</span></h3>
+      <p>Entity-Component-System architecture with classes for entities, a component registry, and system update loops. Full game engine patterns.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Extensible if the game grows significantly</li>
+          <li>Clean abstractions</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>Massive overkill for a turn-based 2D game</li>
+          <li>Adds complexity without proportional benefit</li>
+          <li>Slower to build</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem; padding: 1.25rem; background: rgba(255,255,255,0.03); border-radius: 8px; border-left: 3px solid #60a5fa;">
+  <h3 style="margin-top:0">Recommendation: Option B</h3>
+  <p style="margin-bottom:0">ES Modules hits the sweet spot -- clean code organization without any build tooling. The "must serve locally" constraint is trivially solved with <code>python3 -m http.server</code> or a one-line script. Each module stays small enough to reason about independently, and the game's natural boundaries (rendering, physics, audio, AI, UI) map directly to files.</p>
+</div>

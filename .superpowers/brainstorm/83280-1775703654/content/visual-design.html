@@ -1,0 +1,208 @@
+<h2>Visual Design: Game Screen Layout</h2>
+<p class="subtitle">Faithful to the original with modern touches</p>
+
+<div class="mockup" style="margin-bottom: 2rem;">
+  <div class="mockup-header">Game Screen -- In Play</div>
+  <div class="mockup-body" style="background: #000033; padding: 0; overflow: hidden; position: relative; height: 500px; font-family: 'Courier New', monospace;">
+
+    <!-- Sky -->
+    <div style="position: absolute; top: 0; left: 0; right: 0; height: 60px; background: #000033;">
+      <!-- Stars -->
+      <div style="position:absolute;top:8px;left:45px;color:#fff;font-size:6px;">&#9733;</div>
+      <div style="position:absolute;top:20px;left:120px;color:#fff;font-size:4px;">&#9733;</div>
+      <div style="position:absolute;top:12px;left:210px;color:#fff;font-size:5px;">&#9733;</div>
+      <div style="position:absolute;top:5px;left:350px;color:#fff;font-size:6px;">&#9733;</div>
+      <div style="position:absolute;top:25px;left:420px;color:#fff;font-size:4px;">&#9733;</div>
+      <div style="position:absolute;top:8px;left:550px;color:#fff;font-size:5px;">&#9733;</div>
+      <div style="position:absolute;top:18px;left:650px;color:#fff;font-size:6px;">&#9733;</div>
+    </div>
+
+    <!-- Score bar -->
+    <div style="position: absolute; top: 5px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 15px; color: #ffff55; font-size: 13px; font-weight: bold; z-index: 10;">
+      <span>P1: 2</span>
+      <span style="color: #55ff55;">Round 3/5</span>
+      <span>P2: 1</span>
+    </div>
+
+    <!-- Wind indicator -->
+    <div style="position: absolute; top: 25px; left: 50%; transform: translateX(-50%); color: #55ffff; font-size: 11px; z-index: 10; text-align: center;">
+      Wind: <span style="letter-spacing: 2px;">&#9654;&#9654;&#9654;</span>
+    </div>
+
+    <!-- Off-screen banana tracker (shown at top) -->
+    <div style="position: absolute; top: 42px; left: 280px; z-index: 10; text-align: center;">
+      <div style="color: #ffff00; font-size: 16px; animation: pulse 0.5s infinite alternate;">&#9660;</div>
+      <div style="color: #ffff00; font-size: 8px; margin-top: -2px;">BANANA</div>
+    </div>
+
+    <!-- Buildings -->
+    <!-- Building 1 -->
+    <div style="position: absolute; bottom: 0; left: 10px; width: 65px; height: 180px; background: #aa0000;">
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; padding: 6px 5px;">
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#333;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#333;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#333;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#333;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#333;"></div>
+        <div style="width:8px;height:10px;background:#333;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#333;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#333;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#333;"></div><div style="width:8px;height:10px;background:#333;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+      </div>
+    </div>
+
+    <!-- Building 2 (with gorilla P1) -->
+    <div style="position: absolute; bottom: 0; left: 85px; width: 75px; height: 240px; background: #0000aa;">
+      <!-- Gorilla P1 -->
+      <div style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); text-align: center;">
+        <div style="font-size: 28px; line-height: 1;">&#129421;</div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; padding: 6px 6px;">
+        <div style="width:9px;height:10px;background:#ffff55;"></div><div style="width:9px;height:10px;background:#ffff55;"></div>
+        <div style="width:9px;height:10px;background:#333;"></div><div style="width:9px;height:10px;background:#ffff55;"></div>
+        <div style="width:9px;height:10px;background:#333;"></div><div style="width:9px;height:10px;background:#ffff55;"></div>
+        <div style="width:9px;height:10px;background:#ffff55;"></div><div style="width:9px;height:10px;background:#333;"></div>
+        <div style="width:9px;height:10px;background:#ffff55;"></div><div style="width:9px;height:10px;background:#333;"></div>
+        <div style="width:9px;height:10px;background:#333;"></div><div style="width:9px;height:10px;background:#ffff55;"></div>
+        <div style="width:9px;height:10px;background:#333;"></div><div style="width:9px;height:10px;background:#ffff55;"></div>
+        <div style="width:9px;height:10px;background:#ffff55;"></div><div style="width:9px;height:10px;background:#333;"></div>
+        <div style="width:9px;height:10px;background:#ffff55;"></div><div style="width:9px;height:10px;background:#ffff55;"></div>
+        <div style="width:9px;height:10px;background:#333;"></div><div style="width:9px;height:10px;background:#ffff55;"></div>
+        <div style="width:9px;height:10px;background:#333;"></div><div style="width:9px;height:10px;background:#333;"></div>
+        <div style="width:9px;height:10px;background:#ffff55;"></div><div style="width:9px;height:10px;background:#ffff55;"></div>
+      </div>
+    </div>
+
+    <!-- Building 3 -->
+    <div style="position: absolute; bottom: 0; left: 170px; width: 60px; height: 150px; background: #00aa00;">
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 6px 6px;">
+        <div style="width:10px;height:10px;background:#ffff55;"></div><div style="width:10px;height:10px;background:#333;"></div><div style="width:10px;height:10px;background:#ffff55;"></div>
+        <div style="width:10px;height:10px;background:#333;"></div><div style="width:10px;height:10px;background:#ffff55;"></div><div style="width:10px;height:10px;background:#333;"></div>
+        <div style="width:10px;height:10px;background:#ffff55;"></div><div style="width:10px;height:10px;background:#ffff55;"></div><div style="width:10px;height:10px;background:#333;"></div>
+        <div style="width:10px;height:10px;background:#333;"></div><div style="width:10px;height:10px;background:#ffff55;"></div><div style="width:10px;height:10px;background:#ffff55;"></div>
+      </div>
+    </div>
+
+    <!-- Explosion crater in building 3 -->
+    <div style="position: absolute; bottom: 120px; left: 175px; width: 30px; height: 25px; background: #000033; border-radius: 50%;"></div>
+
+    <!-- Building 4 -->
+    <div style="position: absolute; bottom: 0; left: 240px; width: 70px; height: 200px; background: #aa00aa;">
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; padding: 6px 5px;">
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#333;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#333;"></div>
+        <div style="width:8px;height:10px;background:#333;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#333;"></div>
+        <div style="width:8px;height:10px;background:#333;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#333;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#333;"></div>
+      </div>
+    </div>
+
+    <!-- Building 5 -->
+    <div style="position: absolute; bottom: 0; left: 320px; width: 55px; height: 270px; background: #00aaaa;">
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 6px 5px;">
+        <div style="width:9px;height:10px;background:#ffff55;"></div><div style="width:9px;height:10px;background:#333;"></div><div style="width:9px;height:10px;background:#ffff55;"></div>
+        <div style="width:9px;height:10px;background:#333;"></div><div style="width:9px;height:10px;background:#ffff55;"></div><div style="width:9px;height:10px;background:#333;"></div>
+        <div style="width:9px;height:10px;background:#ffff55;"></div><div style="width:9px;height:10px;background:#333;"></div><div style="width:9px;height:10px;background:#ffff55;"></div>
+        <div style="width:9px;height:10px;background:#333;"></div><div style="width:9px;height:10px;background:#ffff55;"></div><div style="width:9px;height:10px;background:#333;"></div>
+        <div style="width:9px;height:10px;background:#ffff55;"></div><div style="width:9px;height:10px;background:#ffff55;"></div><div style="width:9px;height:10px;background:#333;"></div>
+        <div style="width:9px;height:10px;background:#333;"></div><div style="width:9px;height:10px;background:#ffff55;"></div><div style="width:9px;height:10px;background:#ffff55;"></div>
+        <div style="width:9px;height:10px;background:#ffff55;"></div><div style="width:9px;height:10px;background:#333;"></div><div style="width:9px;height:10px;background:#333;"></div>
+        <div style="width:9px;height:10px;background:#333;"></div><div style="width:9px;height:10px;background:#ffff55;"></div><div style="width:9px;height:10px;background:#ffff55;"></div>
+      </div>
+    </div>
+
+    <!-- Building 6 -->
+    <div style="position: absolute; bottom: 0; left: 385px; width: 65px; height: 160px; background: #aa5500;">
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; padding: 6px 4px;">
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#333;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#333;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#333;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#333;"></div>
+        <div style="width:8px;height:10px;background:#333;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+      </div>
+    </div>
+
+    <!-- Building 7 (with gorilla P2) -->
+    <div style="position: absolute; bottom: 0; left: 460px; width: 70px; height: 220px; background: #5555ff;">
+      <!-- Gorilla P2 -->
+      <div style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); text-align: center;">
+        <div style="font-size: 28px; line-height: 1;">&#129421;</div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; padding: 6px 5px;">
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#333;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#333;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#333;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#333;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#333;"></div>
+      </div>
+    </div>
+
+    <!-- Building 8 -->
+    <div style="position: absolute; bottom: 0; left: 540px; width: 60px; height: 190px; background: #aa0000;">
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 6px 6px;">
+        <div style="width:10px;height:10px;background:#ffff55;"></div><div style="width:10px;height:10px;background:#333;"></div><div style="width:10px;height:10px;background:#ffff55;"></div>
+        <div style="width:10px;height:10px;background:#333;"></div><div style="width:10px;height:10px;background:#ffff55;"></div><div style="width:10px;height:10px;background:#333;"></div>
+        <div style="width:10px;height:10px;background:#ffff55;"></div><div style="width:10px;height:10px;background:#333;"></div><div style="width:10px;height:10px;background:#ffff55;"></div>
+        <div style="width:10px;height:10px;background:#333;"></div><div style="width:10px;height:10px;background:#ffff55;"></div><div style="width:10px;height:10px;background:#333;"></div>
+      </div>
+    </div>
+
+    <!-- Building 9 -->
+    <div style="position: absolute; bottom: 0; left: 610px; width: 70px; height: 140px; background: #00aa00;">
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; padding: 6px 5px;">
+        <div style="width:8px;height:10px;background:#333;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#333;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#333;"></div>
+        <div style="width:8px;height:10px;background:#ffff55;"></div><div style="width:8px;height:10px;background:#ffff55;"></div>
+      </div>
+    </div>
+
+    <!-- Banana projectile with trail -->
+    <div style="position: absolute; top: 140px; left: 310px; color: #ffff00; font-size: 18px; transform: rotate(45deg);">&#127820;</div>
+    <!-- Faint shot trail dots -->
+    <div style="position:absolute;top:200px;left:180px;width:4px;height:4px;background:rgba(255,255,0,0.15);border-radius:50%;"></div>
+    <div style="position:absolute;top:185px;left:210px;width:4px;height:4px;background:rgba(255,255,0,0.2);border-radius:50%;"></div>
+    <div style="position:absolute;top:172px;left:240px;width:4px;height:4px;background:rgba(255,255,0,0.25);border-radius:50%;"></div>
+    <div style="position:absolute;top:162px;left:270px;width:4px;height:4px;background:rgba(255,255,0,0.3);border-radius:50%;"></div>
+    <div style="position:absolute;top:155px;left:295px;width:4px;height:4px;background:rgba(255,255,0,0.35);border-radius:50%;"></div>
+
+    <!-- Player input panel -->
+    <div style="position: absolute; bottom: 8px; left: 10px; background: rgba(0,0,80,0.9); border: 1px solid #5555ff; padding: 8px 12px; font-size: 11px; color: #55ff55; border-radius: 2px;">
+      <div style="color: #ffff55; margin-bottom: 4px; font-weight: bold;">&#9654; Player 1's Turn</div>
+      <div style="display: flex; gap: 12px;">
+        <span>Angle: <span style="background:#000;padding:1px 6px;border:1px solid #55ff55;color:#fff;">65</span> <span style="color:#888;font-size:9px;">(last: 60)</span></span>
+        <span>Velocity: <span style="background:#000;padding:1px 6px;border:1px solid #55ff55;color:#fff;">53</span> <span style="color:#888;font-size:9px;">(last: 50)</span></span>
+        <span style="color:#ffff55;margin-left:4px;">[Enter] Fire!</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+  <h3 style="margin-top:0">Key Visual Elements</h3>
+  <ul style="margin:0;line-height:1.8;">
+    <li><strong>EGA color palette</strong> -- buildings use the classic 16-color EGA palette (bright red, blue, green, cyan, magenta, brown)</li>
+    <li><strong>Lit/unlit windows</strong> -- randomly toggled yellow/dark, just like the original</li>
+    <li><strong>Banana emoji</strong> with rotation animation during flight (modern touch)</li>
+    <li><strong>Faint shot trail</strong> (toggleable) -- dots that fade from the launch point</li>
+    <li><strong>Off-screen tracker</strong> -- yellow arrow at top follows banana's X when it's above viewport</li>
+    <li><strong>Explosion crater</strong> -- circular cutout in buildings where hits land</li>
+    <li><strong>Wind arrows</strong> -- visual indicator scaling with strength, replacing the original's plain number</li>
+    <li><strong>Input panel</strong> -- bottom-left overlay with prefilled values and last-turn reference</li>
+  </ul>
+</div>
+
+<style>
+  @keyframes pulse {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+  }
+</style>
