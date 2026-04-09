@@ -92,4 +92,5 @@ export const STATE = {
   ROUND_END: 'ROUND_END',
   GAME_OVER: 'GAME_OVER',
   PAUSED: 'PAUSED',
+  SETTINGS: 'SETTINGS',
 };

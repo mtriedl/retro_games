@@ -5,6 +5,7 @@ import {
   WIND_MIN, WIND_MAX,
   EXPLOSION_BUILDING_RADIUS, EXPLOSION_GORILLA_RADIUS,
   GORILLA_FRAME_SIZE, BANANA_RADIUS,
+  GRAVITY_PRESETS,
 } from './constants.js';
 import { loadSettings, saveSettings, getGravityValue } from './settings.js';
 import { generateCity, initHeightmap, carveExplosion } from './buildings.js';
@@ -55,6 +56,8 @@ const game = {
   celestialTimer: 0,
   menuIndex: 0,
   settingsIndex: 0,
+  settingsFrom: null,
+  customGravityInput: '',
   buildingAnimProgress: 0,
   roundEndTimer: 0,
   roundEndWinner: -1,
@@ -312,6 +315,10 @@ function handleKey(key) {
       handleMenuKey(key, ['resume', 'restart', 'settings', 'quit'], game, 'menuIndex', handlePauseAction);
       break;
 
+    case STATE.SETTINGS:
+      handleSettingsKey(key);
+      break;
+
     case STATE.GAME_OVER:
       if (key === 'Enter') {
         game.state = STATE.TITLE_SCREEN;
@@ -339,7 +346,11 @@ function handleTitleAction(action) {
       startNewGame();
       break;
     case 'settings':
-      game.state = STATE.TITLE_SCREEN; // TODO: settings screen in Task 11
+      game.settingsFrom = 'title';
+      game.settingsIndex = 0;
+      game.customGravityInput = String(settings.customGravity);
+      game.previousState = game.state;
+      game.state = STATE.SETTINGS;
       break;
     case 'fullscreen':
       canvas.requestFullscreen?.();
@@ -356,13 +367,152 @@ function handlePauseAction(action) {
       startRound();
       break;
     case 'settings':
-      // TODO: settings from pause in Task 11
+      game.settingsFrom = 'pause';
+      game.settingsIndex = 0;
+      game.customGravityInput = String(settings.customGravity);
+      game.previousState = game.state;
+      game.state = STATE.SETTINGS;
       break;
     case 'quit':
       game.state = STATE.TITLE_SCREEN;
       game.menuIndex = 0;
       break;
   }
+}
+
+function getSettingsItemCount() {
+  return settings.gravityPreset === 'Custom' ? 8 : 7;
+}
+
+function getSettingsItemName(index) {
+  const isCustom = settings.gravityPreset === 'Custom';
+  const items = [
+    'rounds',
+    'gravityPreset',
+    ...(isCustom ? ['customGravity'] : []),
+    'player2Mode',
+    'shotTrail',
+    'aimPreview',
+    'volume',
+    'back',
+  ];
+  return items[index] || null;
+}
+
+function handleSettingsKey(key) {
+  const itemCount = getSettingsItemCount();
+  const itemName = getSettingsItemName(game.settingsIndex);
+
+  if (key === 'ArrowUp') {
+    game.settingsIndex = (game.settingsIndex - 1 + itemCount) % itemCount;
+    audio.playMenuSelect();
+    return;
+  }
+  if (key === 'ArrowDown') {
+    game.settingsIndex = (game.settingsIndex + 1) % itemCount;
+    audio.playMenuSelect();
+    return;
+  }
+
+  // Enter on Back
+  if (key === 'Enter' && itemName === 'back') {
+    if (game.settingsFrom === 'title') {
+      game.state = STATE.TITLE_SCREEN;
+      game.menuIndex = 0;
+    } else {
+      game.state = STATE.PAUSED;
+      game.menuIndex = 0;
+    }
+    return;
+  }
+
+  // Escape also goes back
+  if (key === 'Escape') {
+    if (game.settingsFrom === 'title') {
+      game.state = STATE.TITLE_SCREEN;
+      game.menuIndex = 0;
+    } else {
+      game.state = STATE.PAUSED;
+      game.menuIndex = 0;
+    }
+    return;
+  }
+
+  // Custom gravity text input
+  if (itemName === 'customGravity') {
+    if (key >= '0' && key <= '9' || key === '.') {
+      let candidate = game.customGravityInput + key;
+      // Prevent multiple dots
+      if (key === '.' && game.customGravityInput.includes('.')) return;
+      // Limit to 2 decimal places
+      const dotIndex = candidate.indexOf('.');
+      if (dotIndex >= 0 && candidate.length - dotIndex - 1 > 2) return;
+      game.customGravityInput = candidate;
+      const parsed = parseFloat(game.customGravityInput);
+      if (!isNaN(parsed) && parsed >= 0.1) {
+        settings.customGravity = parsed;
+        saveSettings(settings);
+      }
+      return;
+    }
+    if (key === 'Backspace') {
+      game.customGravityInput = game.customGravityInput.slice(0, -1);
+      const parsed = parseFloat(game.customGravityInput);
+      if (!isNaN(parsed) && parsed >= 0.1) {
+        settings.customGravity = parsed;
+        saveSettings(settings);
+      }
+      return;
+    }
+  }
+
+  // Left/Right cycling
+  if (key !== 'ArrowLeft' && key !== 'ArrowRight') return;
+  const dir = key === 'ArrowRight' ? 1 : -1;
+
+  switch (itemName) {
+    case 'rounds': {
+      const options = [1, 3, 5, 10];
+      const idx = options.indexOf(settings.rounds);
+      const newIdx = (idx + dir + options.length) % options.length;
+      settings.rounds = options[newIdx];
+      break;
+    }
+    case 'gravityPreset': {
+      const presetNames = GRAVITY_PRESETS.map(p => p.name).concat('Custom');
+      const idx = presetNames.indexOf(settings.gravityPreset);
+      const newIdx = (idx + dir + presetNames.length) % presetNames.length;
+      settings.gravityPreset = presetNames[newIdx];
+      game.customGravityInput = String(settings.customGravity);
+      // Clamp settingsIndex if Custom row disappeared
+      const newCount = getSettingsItemCount();
+      if (game.settingsIndex >= newCount) {
+        game.settingsIndex = newCount - 1;
+      }
+      break;
+    }
+    case 'player2Mode': {
+      const options = ['human', 'ai_easy', 'ai_medium', 'ai_hard'];
+      const idx = options.indexOf(settings.player2Mode);
+      const newIdx = (idx + dir + options.length) % options.length;
+      settings.player2Mode = options[newIdx];
+      break;
+    }
+    case 'shotTrail':
+      settings.shotTrail = !settings.shotTrail;
+      break;
+    case 'aimPreview':
+      settings.aimPreview = !settings.aimPreview;
+      break;
+    case 'volume': {
+      settings.volume = Math.round(Math.min(1, Math.max(0, settings.volume + dir * 0.1)) * 10) / 10;
+      audio.setVolume(settings.volume);
+      break;
+    }
+    default:
+      return; // No cycling for back or customGravity
+  }
+  saveSettings(settings);
 }
 
 function handlePlayerInputKey(key) {
@@ -530,6 +680,11 @@ function render(alpha) {
     case STATE.PAUSED:
       drawGameScene(alpha);
       renderer.drawPauseMenu(game.menuIndex);
+      break;
+
+    case STATE.SETTINGS:
+      renderer.drawSettingsMenu(settings, game.settingsIndex,
+        settings.gravityPreset === 'Custom', game.customGravityInput);
       break;
   }
 }
