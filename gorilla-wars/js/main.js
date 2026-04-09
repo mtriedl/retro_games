@@ -47,6 +47,7 @@ const game = {
   inputField: 'angle',
   inputValue: '',
   confirmedAngle: null,
+  aimPreviewAngle: null,
   lastInputs: [{ angle: null, velocity: null }, { angle: null, velocity: null }],
   explosions: [],
   particles: [],
@@ -542,6 +543,14 @@ function handlePlayerInputKey(key) {
 
   game.inputField = input.state.field;
   game.inputValue = input.state.value;
+
+  // Update aim preview angle while typing
+  if (game.inputField === 'angle' && game.inputValue !== '') {
+    const parsed = parseInt(game.inputValue, 10);
+    game.aimPreviewAngle = isNaN(parsed) ? null : Math.max(0, Math.min(90, parsed));
+  } else if (game.inputField !== 'angle') {
+    game.aimPreviewAngle = null;
+  }
 }
 
 function handleClick(e) {
@@ -644,6 +653,7 @@ function resetInput() {
   game.inputField = 'angle';
   game.inputValue = '';
   game.confirmedAngle = null;
+  game.aimPreviewAngle = null;
   game.aiThinkTimer = 0;
   // Reset gorilla frame to idle
   game.gorillas[game.activePlayer].frame = 0;
@@ -735,9 +745,12 @@ function drawGameScene(alpha) {
     renderer.drawShotTrail(game.previousTrail, game.trailAlpha);
   }
 
-  // Aim preview
-  if (game.state === STATE.PLAYER_INPUT && settings.aimPreview && game.confirmedAngle !== null) {
-    renderer.drawAimPreview(game.gorillas[game.activePlayer], game.confirmedAngle, game.activePlayer);
+  // Aim preview (show during angle typing and after angle confirmed)
+  if (game.state === STATE.PLAYER_INPUT && settings.aimPreview) {
+    const previewAngle = game.inputField === 'angle' ? game.aimPreviewAngle : game.confirmedAngle;
+    if (previewAngle !== null && previewAngle !== undefined) {
+      renderer.drawAimPreview(game.gorillas[game.activePlayer], previewAngle, game.activePlayer);
+    }
   }
 
   renderer.drawBanana(game.banana, alpha);
