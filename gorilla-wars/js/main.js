@@ -14,6 +14,7 @@ import { createInputHandler } from './input.js';
 import { createGorillaSprites } from './sprites.js';
 import { createAudioEngine } from './audio.js';
 import { createRenderer } from './renderer.js';
+import { calculateAIShot } from './ai.js';
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -62,6 +63,7 @@ const game = {
   roundEndTimer: 0,
   roundEndWinner: -1,
   aiThinkTimer: 0,
+  aiLastShot: null,
   blinkTimer: 0,
   blinkOn: true,
 };
@@ -200,6 +202,10 @@ function updateProjectile(dt) {
     case 'miss':
       game.banana.active = false;
       audio.playMiss();
+      if (isAITurn() && game.aiLastShot) {
+        const target = game.gorillas[0];
+        game.aiLastShot.missDirection = game.banana.x < target.x ? -1 : 1;
+      }
       game.previousTrail = [...game.shotTrail];
       game.trailAlpha = 1;
       game.shotTrail = [];
@@ -211,6 +217,10 @@ function updateProjectile(dt) {
     case 'building':
       game.banana.active = false;
       audio.playBuildingHit();
+      if (isAITurn() && game.aiLastShot) {
+        const target = game.gorillas[0];
+        game.aiLastShot.missDirection = game.banana.x < target.x ? -1 : 1;
+      }
       spawnExplosion(result.x, result.y, EXPLOSION_BUILDING_RADIUS);
       carveExplosion(game.heightmap, result.x, result.y, EXPLOSION_BUILDING_RADIUS);
       game.previousTrail = [...game.shotTrail];
@@ -634,6 +644,7 @@ function resetInput() {
   game.inputField = 'angle';
   game.inputValue = '';
   game.confirmedAngle = null;
+  game.aiThinkTimer = 0;
   // Reset gorilla frame to idle
   game.gorillas[game.activePlayer].frame = 0;
 }
@@ -644,7 +655,27 @@ function isAITurn() {
 
 function handleAITurn(dt) {
   if (!isAITurn()) return;
-  // AI delay handled in Task 12
+  game.aiThinkTimer += dt;
+  if (game.aiThinkTimer < 0.8) return; // thinking delay
+
+  const difficulty = settings.player2Mode.replace('ai_', '');
+  const gravitySim = getGravityValue(settings) * GRAVITY_SCALE;
+  const shot = calculateAIShot(
+    game.gorillas[0],     // target (P1)
+    game.gorillas[1],     // AI gorilla (P2)
+    game.wind,
+    gravitySim,
+    game.heightmap,
+    difficulty,
+    game.aiLastShot || null
+  );
+
+  game.lastInputs[1].angle = shot.angle;
+  game.lastInputs[1].velocity = shot.velocity;
+  game.confirmedAngle = shot.angle;
+  fireBanana(shot.angle, shot.velocity);
+  game.aiLastShot = { angle: shot.angle, velocity: shot.velocity, missDirection: 0 };
+  game.aiThinkTimer = 0;
 }
 
 // --- Render ---
