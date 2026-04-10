@@ -607,7 +607,7 @@ export function createRenderer(ctx) {
         { label: 'Gravity', value: `${settings.gravityPreset} (${settings.gravityPreset === 'Custom' ? settings.customGravity : (GRAVITY_PRESETS.find(p => p.name === settings.gravityPreset)?.gravity ?? '')})`, cycle: true },
         ...(settings.gravityPreset === 'Custom' ? [{ label: 'Custom G', value: editingCustom ? customValue + '_' : String(settings.customGravity), cycle: false }] : []),
         { label: 'Player 2', value: settings.player2Mode, cycle: true },
-        { label: 'Character', value: settings.character, cycle: true, preview: characterPreview },
+        { label: 'Character', value: settings.character, cycle: true, preview: characterPreview, hasPreview: true },
         { label: 'Projectile', value: settings.projectile, cycle: true, preview: projectileSprite, isBanana: settings.projectile === 'Banana' },
         { label: 'Shot Trail', value: settings.shotTrail ? 'ON' : 'OFF', cycle: true },
         { label: 'Aim Preview', value: settings.aimPreview ? 'ON' : 'OFF', cycle: true },
@@ -730,7 +730,7 @@ export function createRenderer(ctx) {
         }
 
         // Sprite preview (Character / Projectile rows)
-        if (item.preview || item.isBanana) {
+        if (item.preview || item.isBanana || item.hasPreview) {
           const previewSize = CHARACTER_PREVIEW_SIZE;
           const previewX = rightArrowX + arrowW + 8;
           const previewY = y + (rowH - previewSize) / 2;
@@ -758,6 +758,13 @@ export function createRenderer(ctx) {
             ctx.fillRect(-BANANA_RADIUS + 2, -2, 4, 4);
             ctx.fillRect(BANANA_RADIUS - 6, -2, 4, 4);
             ctx.restore();
+          } else if (item.hasPreview) {
+            // Missing sprite placeholder
+            ctx.fillStyle = '#555555';
+            ctx.font = '16px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('?', previewX + previewSize / 2, previewY + previewSize / 2 + 1);
+            ctx.font = '11px monospace';
           }
         }
       }

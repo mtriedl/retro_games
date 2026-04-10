@@ -30,16 +30,19 @@ Flat naming convention in `assets/images/`, matching existing pattern:
 
 Existing gorilla files already follow this convention. New files: `robot-normal.png`, `robot-throw-p1.png`, etc.
 
+**Testing without assets:** Characters whose sprite files are missing gracefully fall back to the Gorilla sprites. All code paths (cycling, preview, game rendering) can be exercised with only the existing Gorilla PNGs present. New character PNGs will be generated separately.
+
 ## Changes
 
 ### 1. Constants (`constants.js`)
 
 - Add `CHARACTER_OPTIONS = ['Gorilla', 'Robot', 'Alien', 'Dinosaur', 'Penguin', 'Goku']`
 - Add `CHARACTER_PREVIEW_SIZE = 32` (rendered preview size in settings menu)
-- Add `SETTINGS_PREVIEW_ROW_H = 36` for taller preview rows (standard rows keep `SETTINGS_ROW_H = 28`)
+- Change `SETTINGS_ROW_H` from `28` to `36` (all rows use uniform height for consistent scroll math)
+- Change `SETTINGS_ROW_GAP` from `4` to `2` (tighter gap compensates for taller rows; 8 visible rows = 8×36 + 7×2 = 302px, fitting comfortably from startY=68 to y=370 with 30px bottom margin)
 - Add scroll-related constants:
   - `SETTINGS_VISIBLE_ROWS = 8`
-  - `SETTINGS_SCROLL_PADDING = 3` (blank rows after last item)
+  - `SETTINGS_SCROLL_PADDING = 3` (blank rows appended after "Back" so the last item can scroll up toward the center of the visible area rather than being pinned to the bottom)
 
 ### 2. Settings (`settings.js`)
 
@@ -47,13 +50,16 @@ Existing gorilla files already follow this convention. New files: `robot-normal.
 
 ### 3. Sprites (`sprites.js`)
 
-**Modify `createGorillaSprites(characterName)`:**
+**Rename `createGorillaSprites` → `createCharacterSprites(characterName)`:**
 - Accept a character name parameter (default `'Gorilla'`)
 - Build paths dynamically: `assets/images/${name.toLowerCase()}-normal.png`, etc.
 - Returns `Promise<Image[]>` (4 frames) as before
+- If any frame fails to load, fall back to loading Gorilla sprites instead (enables testing without new assets)
+- Update all call sites (`main.js`) to use the new name
 
 **Add `loadCharacterPreview(characterName)`:**
 - Loads only the `-normal.png` frame for use in the settings menu preview
+- On load failure, returns null (no gorilla fallback — the preview area shows a "?" placeholder to make missing assets obvious)
 - Returns `Promise<Image|null>`
 
 ### 4. Renderer (`renderer.js`)
@@ -66,23 +72,25 @@ Existing gorilla files already follow this convention. New files: `robot-normal.
 3. Gravity
 4. (Custom G — conditional)
 5. Player 2
-6. Character *(new, tall row with sprite preview)*
-7. Projectile *(updated, tall row with sprite preview)*
+6. Character *(new, with sprite preview)*
+7. Projectile *(with sprite preview)*
 8. Shot Trail
 9. Aim Preview
 10. Dynamic Aim
-11. Volume
+11. Volume *(unchanged bar widget rendering)*
 12. Back
 
 **Scrollable rendering:**
 - Accept `scrollOffset` parameter
 - Only draw items in range `[scrollOffset..scrollOffset + SETTINGS_VISIBLE_ROWS - 1]`
 - Use `ctx.save()` / `ctx.beginPath()` / `ctx.rect()` / `ctx.clip()` to clip the menu area
-- Draw scroll indicators (up/down arrows) at top/bottom of menu area when content exists above/below the visible window
-- Append `SETTINGS_SCROLL_PADDING` blank rows after "Back" so it can scroll into the center of the visible area
+- Draw scroll indicators at top/bottom of menu area when content exists above/below the visible window:
+  - Visual: small chevron arrows (▲/▼) centered horizontally above/below the menu area
+  - Tap target: full-width bar, same height as one row (36px), covering the top or bottom of the menu area
+  - Only shown when there is content in that direction to scroll to
+- Append `SETTINGS_SCROLL_PADDING` blank rows after "Back" for scroll math
 
 **Preview rows (Character & Projectile):**
-- Use taller row height (36px instead of 28px)
 - After the `>` arrow button, draw a 32x32 sprite preview at the right edge of the row
 - Sprite rendered with `imageSmoothingEnabled = false`
 - Subtle background rect behind the preview for visual framing
@@ -95,6 +103,9 @@ Existing gorilla files already follow this convention. New files: `robot-normal.
 - `settingsScrollOffset = 0` — tracks which row is at the top of the visible window
 - `characterPreviewSprite = null` — cached preview image for settings menu
 
+**Settings entry initialization:**
+- When entering the settings menu, reset `settingsScrollOffset = 0` and load `characterPreviewSprite` via `loadCharacterPreview(settings.character)` and load `projectileSprite` via `loadProjectileSprite(settings.projectile)` so previews are ready immediately
+
 **Settings item reorder:**
 - Update `getSettingsItemName()` to reflect new item order (character and projectile after player2Mode)
 - Update `getSettingsItemCount()` to include the new character item
@@ -102,7 +113,9 @@ Existing gorilla files already follow this convention. New files: `robot-normal.
 **Character cycling logic in `handleSettingsKey()`:**
 - Cycle through `CHARACTER_OPTIONS` using left/right arrows (same pattern as projectile)
 - On change: reload `characterPreviewSprite` via `loadCharacterPreview()`
-- On exiting settings: reload full 4-frame sprite set via `createGorillaSprites(settings.character)`
+
+**Settings exit:**
+- On exiting settings: reload full 4-frame sprite set via `createCharacterSprites(settings.character)`
 
 **Auto-scroll logic:**
 - When `selectedIndex` changes, adjust `settingsScrollOffset` to keep the selected item visible
@@ -111,18 +124,18 @@ Existing gorilla files already follow this convention. New files: `robot-normal.
 - Clamp `scrollOffset` to `[0, totalItems + SETTINGS_SCROLL_PADDING - SETTINGS_VISIBLE_ROWS]`
 
 **Scroll indicator tap targets:**
-- Add touch/click handlers for scroll indicator arrows at top/bottom of menu
+- Add touch/click handlers for scroll indicator areas at top/bottom of menu (full-width, 36px tall)
+- Tapping scrolls by one row in that direction
 
 **Render call updates:**
 - Pass `settingsScrollOffset` to `drawSettingsMenu()`
 - Pass preview sprites to `drawSettingsMenu()` for both character and projectile
-- On game start / settings exit: call `createGorillaSprites(settings.character)` to load full sprite set
 
 ### 6. Touch handling (`main.js` touch/click handlers)
 
 - Existing arrow button tap detection continues to work on logical item positions
 - Adjust hit detection to account for scroll offset (screen position = logical position - scrollOffset)
-- Scroll indicator arrows at top/bottom are tappable
+- Scroll indicator areas at top/bottom are tappable (full-width, 36px)
 
 ## What stays the same
 
@@ -131,6 +144,7 @@ Existing gorilla files already follow this convention. New files: `robot-normal.
 - Buildings (`buildings.js`) — unchanged, gorilla placement is character-agnostic
 - Audio (`audio.js`) — unchanged
 - Gorilla rendering (`drawGorilla`) — unchanged, already takes `spriteFrames` array
+- Volume row — unchanged bar widget rendering, just repositioned in menu order
 
 ## Future extensibility
 

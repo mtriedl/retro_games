@@ -35,14 +35,7 @@ export async function loadCharacterPreview(characterName = 'Gorilla') {
   try {
     return await loadImage(src);
   } catch {
-    if (characterName !== 'Gorilla') {
-      console.warn(`Failed to load ${characterName} preview, falling back to Gorilla`);
-      try {
-        return await loadImage('assets/images/gorilla-normal.png');
-      } catch {
-        return null;
-      }
-    }
+    console.warn(`Failed to load ${characterName} preview`);
     return null;
   }
 }
