@@ -623,10 +623,42 @@ export function createRenderer(ctx) {
       const rowX = CANVAS_WIDTH / 2 - rowW / 2;
       const arrowW = SETTINGS_ARROW_W;
 
+      const totalItems = items.length;
+      const visibleH = SETTINGS_VISIBLE_ROWS * rowH + (SETTINGS_VISIBLE_ROWS - 1) * rowGap;
+
+      // Scroll indicators
+      const hasAbove = scrollOffset > 0;
+      const maxScroll = Math.max(0, totalItems + SETTINGS_SCROLL_PADDING - SETTINGS_VISIBLE_ROWS);
+      const hasBelow = scrollOffset < maxScroll;
+
+      if (hasAbove) {
+        ctx.fillStyle = '#888888';
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('\u25B2', CANVAS_WIDTH / 2, startY - 6);
+      }
+      if (hasBelow) {
+        ctx.fillStyle = '#888888';
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('\u25BC', CANVAS_WIDTH / 2, startY + visibleH + 14);
+      }
+
+      // Clip to visible area
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, startY, CANVAS_WIDTH, visibleH);
+      ctx.clip();
+
       ctx.font = '11px monospace';
       ctx.textBaseline = 'middle';
-      items.forEach((item, i) => {
-        const y = startY + i * (rowH + rowGap);
+
+      for (let i = 0; i < totalItems; i++) {
+        const visIndex = i - scrollOffset;
+        if (visIndex < 0 || visIndex >= SETTINGS_VISIBLE_ROWS) continue;
+
+        const item = items[i];
+        const y = startY + visIndex * (rowH + rowGap);
         const midY = y + rowH / 2;
         const selected = i === selectedIndex;
 
@@ -641,18 +673,18 @@ export function createRenderer(ctx) {
           ctx.fillStyle = selected ? '#FFFFFF' : '#888888';
           ctx.textAlign = 'center';
           ctx.fillText('Back', CANVAS_WIDTH / 2, midY);
-          return;
+          continue;
         }
 
         // Row background
         ctx.fillStyle = selected ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)';
         ctx.fillRect(rowX, y, rowW, rowH);
 
-        // Arrow buttons for cycling items (compute positions first for value centering)
+        // Arrow button positions
         const leftArrowX = rowX + rowW - 200;
         const rightArrowX = rowX + rowW - arrowW - 4;
-        const arrowY = y + 2;
-        const arrowH = rowH - 4;
+        const arrowY = y + (rowH - (arrowW - 4)) / 2;
+        const arrowH = arrowW - 4;
 
         // Value center: midpoint between left arrow right edge and right arrow left edge
         const valueCenterX = (leftArrowX + arrowW + rightArrowX) / 2;
@@ -688,15 +720,49 @@ export function createRenderer(ctx) {
           ctx.fillRect(leftArrowX, arrowY, arrowW, arrowH);
           ctx.fillStyle = '#FFD700';
           ctx.textAlign = 'center';
-          ctx.fillText('<', leftArrowX + arrowW / 2, y + rowH / 2);
+          ctx.fillText('<', leftArrowX + arrowW / 2, midY);
 
           ctx.fillStyle = '#444444';
           ctx.fillRect(rightArrowX, arrowY, arrowW, arrowH);
           ctx.fillStyle = '#FFD700';
           ctx.textAlign = 'center';
-          ctx.fillText('>', rightArrowX + arrowW / 2, y + rowH / 2);
+          ctx.fillText('>', rightArrowX + arrowW / 2, midY);
         }
-      });
+
+        // Sprite preview (Character / Projectile rows)
+        if (item.preview || item.isBanana) {
+          const previewSize = CHARACTER_PREVIEW_SIZE;
+          const previewX = rightArrowX + arrowW + 8;
+          const previewY = y + (rowH - previewSize) / 2;
+
+          // Subtle background frame
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+          ctx.fillRect(previewX - 1, previewY - 1, previewSize + 2, previewSize + 2);
+
+          if (item.preview) {
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(item.preview, previewX, previewY, previewSize, previewSize);
+            ctx.imageSmoothingEnabled = true;
+          } else if (item.isBanana) {
+            // Procedural mini banana
+            ctx.save();
+            ctx.translate(previewX + previewSize / 2, previewY + previewSize / 2);
+            const scale = previewSize / (BANANA_RADIUS * 3);
+            ctx.scale(scale, scale);
+            ctx.fillStyle = BANANA_COLOR;
+            ctx.beginPath();
+            ctx.arc(0, 0, BANANA_RADIUS, 0.3, Math.PI - 0.3);
+            ctx.arc(0, -2, BANANA_RADIUS - 3, Math.PI - 0.3, 0.3, true);
+            ctx.fill();
+            ctx.fillStyle = BANANA_TIP_COLOR;
+            ctx.fillRect(-BANANA_RADIUS + 2, -2, 4, 4);
+            ctx.fillRect(BANANA_RADIUS - 6, -2, 4, 4);
+            ctx.restore();
+          }
+        }
+      }
+
+      ctx.restore(); // End clip
       ctx.textBaseline = 'alphabetic';
     },
 
