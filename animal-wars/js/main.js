@@ -502,17 +502,30 @@ function getSettingsItemName(index) {
   return items[index] || null;
 }
 
+function clampSettingsScroll() {
+  const itemCount = getSettingsItemCount();
+  const maxScroll = Math.max(0, itemCount + SETTINGS_SCROLL_PADDING - SETTINGS_VISIBLE_ROWS);
+  if (game.settingsIndex < game.settingsScrollOffset) {
+    game.settingsScrollOffset = game.settingsIndex;
+  } else if (game.settingsIndex >= game.settingsScrollOffset + SETTINGS_VISIBLE_ROWS) {
+    game.settingsScrollOffset = game.settingsIndex - SETTINGS_VISIBLE_ROWS + 1;
+  }
+  game.settingsScrollOffset = Math.max(0, Math.min(game.settingsScrollOffset, maxScroll));
+}
+
 function handleSettingsKey(key) {
   const itemCount = getSettingsItemCount();
   const itemName = getSettingsItemName(game.settingsIndex);
 
   if (key === 'ArrowUp') {
     game.settingsIndex = (game.settingsIndex - 1 + itemCount) % itemCount;
+    clampSettingsScroll();
     audio.playMenuSelect();
     return;
   }
   if (key === 'ArrowDown') {
     game.settingsIndex = (game.settingsIndex + 1) % itemCount;
+    clampSettingsScroll();
     audio.playMenuSelect();
     return;
   }
@@ -601,6 +614,7 @@ function handleSettingsKey(key) {
       if (game.settingsIndex >= newCount) {
         game.settingsIndex = newCount - 1;
       }
+      clampSettingsScroll();
       break;
     }
     case 'player2Mode': {
