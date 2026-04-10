@@ -27,6 +27,10 @@ describe('settings', () => {
     assert.equal(DEFAULT_SETTINGS.volume, 0.5);
   });
 
+  it('DEFAULT_SETTINGS includes character as Gorilla', () => {
+    assert.equal(DEFAULT_SETTINGS.character, 'Gorilla');
+  });
+
   it('loadSettings returns defaults when localStorage is empty', () => {
     const s = loadSettings();
     assert.deepEqual(s, DEFAULT_SETTINGS);

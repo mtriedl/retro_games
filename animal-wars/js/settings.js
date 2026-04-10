@@ -12,6 +12,7 @@ export const DEFAULT_SETTINGS = {
   aimPreview: false,
   dynamicAimPreview: false,
   projectile: 'Banana',
+  character: 'Gorilla',
   volume: 0.5,
 };
 
