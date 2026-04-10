@@ -770,9 +770,6 @@ function handleClick(e) {
     game.state = STATE.TITLE_SCREEN;
     game.menuIndex = 0;
   } else if (game.state === STATE.SETTINGS) {
-    // Settings rows: detect arrow button taps with expanded 44px hit areas
-    // Note from review: 44px hit areas on 32px-spaced rows overlap adjacent rows by ~4px.
-    // The loop iterates top-to-bottom, so the upper row wins on overlap — this is intentional.
     const rowH = SETTINGS_ROW_H;
     const rowGap = SETTINGS_ROW_GAP;
     const startY = 68;
@@ -781,17 +778,34 @@ function handleClick(e) {
     const arrowW = SETTINGS_ARROW_W;
     const hitSize = SETTINGS_ARROW_HIT;
     const itemCount = getSettingsItemCount();
+    const visibleH = SETTINGS_VISIBLE_ROWS * rowH + (SETTINGS_VISIBLE_ROWS - 1) * rowGap;
+    const maxScroll = Math.max(0, itemCount + SETTINGS_SCROLL_PADDING - SETTINGS_VISIBLE_ROWS);
 
+    // Scroll indicator tap: up arrow area (full-width bar above menu)
+    if (game.settingsScrollOffset > 0 && cy >= startY - rowH && cy < startY) {
+      game.settingsScrollOffset = Math.max(0, game.settingsScrollOffset - 1);
+      return;
+    }
+    // Scroll indicator tap: down arrow area (full-width bar below menu)
+    if (game.settingsScrollOffset < maxScroll && cy > startY + visibleH && cy <= startY + visibleH + rowH) {
+      game.settingsScrollOffset = Math.min(maxScroll, game.settingsScrollOffset + 1);
+      return;
+    }
+
+    // Settings row taps — iterate only visible items
     for (let i = 0; i < itemCount; i++) {
-      const y = startY + i * (rowH + rowGap);
+      const visIndex = i - game.settingsScrollOffset;
+      if (visIndex < 0 || visIndex >= SETTINGS_VISIBLE_ROWS) continue;
+
+      const y = startY + visIndex * (rowH + rowGap);
       const itemName = getSettingsItemName(i);
 
       if (itemName === 'back') {
         const bw = 120;
         const bx = CANVAS_WIDTH / 2 - bw / 2;
         if (cx >= bx && cx <= bx + bw && cy >= y && cy <= y + rowH) {
-          handleSettingsKey('Enter');
           game.settingsIndex = i;
+          handleSettingsKey('Enter');
           return;
         }
         continue;
