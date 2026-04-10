@@ -755,8 +755,8 @@ export function createRenderer(ctx) {
             ctx.arc(0, -2, BANANA_RADIUS - 3, Math.PI - 0.3, 0.3, true);
             ctx.fill();
             ctx.fillStyle = BANANA_TIP_COLOR;
-            ctx.fillRect(-BANANA_RADIUS + 2, -2, 4, 4);
-            ctx.fillRect(BANANA_RADIUS - 6, -2, 4, 4);
+            ctx.fillRect(-BANANA_RADIUS, -2, 4, 4);
+            ctx.fillRect(BANANA_RADIUS - 4, -2, 4, 4);
             ctx.restore();
           } else if (item.hasPreview) {
             // Missing sprite placeholder
