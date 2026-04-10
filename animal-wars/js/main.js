@@ -1181,7 +1181,8 @@ function render(alpha) {
 
     case STATE.SETTINGS:
       renderer.drawSettingsMenu(settings, game.settingsIndex,
-        settings.gravityPreset === 'Custom', game.customGravityInput);
+        settings.gravityPreset === 'Custom', game.customGravityInput,
+        game.settingsScrollOffset, game.characterPreviewSprite, projectileSprite);
       break;
   }
 }
