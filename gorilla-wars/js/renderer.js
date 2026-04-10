@@ -594,8 +594,10 @@ export function createRenderer(ctx) {
       const arrowW = SETTINGS_ARROW_W;
 
       ctx.font = '11px monospace';
+      ctx.textBaseline = 'middle';
       items.forEach((item, i) => {
         const y = startY + i * (rowH + rowGap);
+        const midY = y + rowH / 2;
         const selected = i === selectedIndex;
 
         if (item.isBack) {
@@ -608,7 +610,7 @@ export function createRenderer(ctx) {
           ctx.strokeRect(bx, y, bw, rowH);
           ctx.fillStyle = selected ? '#FFFFFF' : '#888888';
           ctx.textAlign = 'center';
-          ctx.fillText('Back', CANVAS_WIDTH / 2, y + rowH - 6);
+          ctx.fillText('Back', CANVAS_WIDTH / 2, midY);
           return;
         }
 
@@ -616,20 +618,26 @@ export function createRenderer(ctx) {
         ctx.fillStyle = selected ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)';
         ctx.fillRect(rowX, y, rowW, rowH);
 
+        // Arrow buttons for cycling items (compute positions first for value centering)
+        const leftArrowX = rowX + rowW - 200;
+        const rightArrowX = rowX + rowW - arrowW - 4;
+        const arrowY = y + 2;
+        const arrowH = rowH - 4;
+
+        // Value center: midpoint between left arrow right edge and right arrow left edge
+        const valueCenterX = (leftArrowX + arrowW + rightArrowX) / 2;
+
         // Label
         ctx.fillStyle = selected ? '#FFD700' : '#888888';
         ctx.textAlign = 'left';
-        ctx.fillText(item.label, rowX + 8, y + rowH - 6);
+        ctx.fillText(item.label, rowX + 8, midY);
 
         // Value area
-        ctx.textAlign = 'center';
-        const valueX = rowX + rowW - 100;
-
         if (item.volume !== undefined && item.volume !== null) {
           // Volume bar
-          const barX = valueX - 50;
           const barW = 80;
           const barH = 6;
+          const barX = valueCenterX - barW / 2;
           const barY = y + (rowH - barH) / 2;
           ctx.fillStyle = '#333333';
           ctx.fillRect(barX, barY, barW, barH);
@@ -637,32 +645,29 @@ export function createRenderer(ctx) {
           ctx.fillRect(barX, barY, barW * item.volume, barH);
           ctx.fillStyle = '#AAAAAA';
           ctx.textAlign = 'right';
-          ctx.fillText(`${Math.round(item.volume * 100)}%`, rowX + rowW - 8, y + rowH - 6);
+          ctx.fillText(`${Math.round(item.volume * 100)}%`, rowX + rowW - 8, midY);
         } else if (item.value !== null) {
           ctx.fillStyle = '#FFFFFF';
-          ctx.fillText(item.value, valueX, y + rowH - 6);
+          ctx.textAlign = 'center';
+          ctx.fillText(item.value, valueCenterX, midY);
         }
 
-        // Arrow buttons for cycling items
+        // Draw arrow buttons
         if (item.cycle) {
-          const leftArrowX = valueX - 70;
-          const rightArrowX = rowX + rowW - arrowW - 4;
-          const arrowY = y + 2;
-          const arrowH = rowH - 4;
-
           ctx.fillStyle = '#444444';
           ctx.fillRect(leftArrowX, arrowY, arrowW, arrowH);
           ctx.fillStyle = '#FFD700';
           ctx.textAlign = 'center';
-          ctx.fillText('<', leftArrowX + arrowW / 2, arrowY + arrowH - 4);
+          ctx.fillText('<', leftArrowX + arrowW / 2, y + rowH / 2);
 
           ctx.fillStyle = '#444444';
           ctx.fillRect(rightArrowX, arrowY, arrowW, arrowH);
           ctx.fillStyle = '#FFD700';
           ctx.textAlign = 'center';
-          ctx.fillText('>', rightArrowX + arrowW / 2, arrowY + arrowH - 4);
+          ctx.fillText('>', rightArrowX + arrowW / 2, y + rowH / 2);
         }
       });
+      ctx.textBaseline = 'alphabetic';
     },
 
     drawRoundEnd(winner, scores) {

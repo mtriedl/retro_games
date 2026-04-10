@@ -750,8 +750,7 @@ function handleClick(e) {
 
       if (cy >= y && cy <= y + rowH) {
         game.settingsIndex = i;
-        const valueX = rowX + rowW - 100;
-        const leftArrowX = valueX - 70;
+        const leftArrowX = rowX + rowW - 200;
         const rightArrowX = rowX + rowW - arrowW - 4;
 
         // Left arrow — 44px hit area centered on visual arrow
