@@ -1,4 +1,4 @@
-// gorilla-wars/tests/constants.test.js
+// animal-wars/tests/constants.test.js
 import { describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
 import * as C from '../js/constants.js';
@@ -40,6 +40,7 @@ describe('constants', () => {
   it('exports projectile options with Banana as first entry', () => {
     assert.ok(Array.isArray(C.PROJECTILE_OPTIONS));
     assert.equal(C.PROJECTILE_OPTIONS[0], 'Banana');
+    assert.equal(C.PROJECTILE_OPTIONS[1], 'Dynamite');
   });
 
   it('exports 13 gravity presets with Earth as default', () => {

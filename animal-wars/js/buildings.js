@@ -3,6 +3,7 @@ import {
   BUILDING_COUNT_MIN, BUILDING_COUNT_MAX,
   BUILDING_MIN_WIDTH, BUILDING_MAX_WIDTH,
   BUILDING_MIN_HEIGHT, BUILDING_MAX_HEIGHT,
+  BUILDING_GAP,
   WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_GUTTER,
   GORILLA_PLACEMENT_RANGE, GORILLA_FRAME_SIZE,
   EGA_BUILDING_COLORS, SKY_DAY_COLOR, SKY_NIGHT_COLOR,
@@ -23,7 +24,7 @@ export function generateCity(isNight) {
     const color = validColors[Math.floor(Math.random() * validColors.length)];
     const windows = generateWindows(x, y, width, height);
     buildings.push({ x, y, width, height, color, windows });
-    x += width;
+    x += width + BUILDING_GAP;
   }
 
   const p1Idx = Math.floor(Math.random() * GORILLA_PLACEMENT_RANGE);
@@ -37,8 +38,9 @@ export function generateCity(isNight) {
 }
 
 function distributeWidths(count) {
+  const totalGap = (count - 1) * BUILDING_GAP;
   const widths = new Array(count).fill(BUILDING_MIN_WIDTH);
-  let remaining = CANVAS_WIDTH - BUILDING_MIN_WIDTH * count;
+  let remaining = CANVAS_WIDTH - totalGap - BUILDING_MIN_WIDTH * count;
   const indices = Array.from({ length: count }, (_, i) => i);
   for (let i = indices.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));

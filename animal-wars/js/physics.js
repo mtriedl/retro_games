@@ -23,7 +23,7 @@ export function stepSimulation(p, gravitySim, windSim, dt) {
   p.rotation += 5 * dt;
 }
 
-export function checkCollisions(banana, heightmap, gorillas, celestialBounds) {
+export function checkCollisions(banana, heightmap, gorillas, celestialBounds, ignoreIndex = -1) {
   const { x, y, radius } = banana;
   const col = Math.floor(x);
 
@@ -34,6 +34,7 @@ export function checkCollisions(banana, heightmap, gorillas, celestialBounds) {
   if (col >= 0 && col < CANVAS_WIDTH) {
     // 2. Gorilla hitboxes (before terrain — gorilla takes priority)
     for (let i = 0; i < gorillas.length; i++) {
+      if (i === ignoreIndex) continue;
       const g = gorillas[i];
       if (!g.visible) continue;
       const boxLeft = g.x - GORILLA_COLLISION_WIDTH / 2;

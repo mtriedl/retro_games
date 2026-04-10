@@ -1,4 +1,4 @@
-// gorilla-wars/js/renderer.js
+// animal-wars/js/renderer.js
 import {
   CANVAS_WIDTH, CANVAS_HEIGHT,
   SKY_DAY_COLOR, SKY_NIGHT_COLOR,
@@ -537,7 +537,7 @@ export function createRenderer(ctx) {
       ctx.fillStyle = '#FFFF00';
       ctx.font = '32px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText('GORILLA WARS', CANVAS_WIDTH / 2, 120);
+      ctx.fillText('ANIMAL WARS', CANVAS_WIDTH / 2, 120);
 
       const items = ['New Game', 'Settings', 'Fullscreen'];
       ctx.font = '14px monospace';

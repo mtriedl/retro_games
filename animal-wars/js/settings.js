@@ -1,6 +1,6 @@
 import { GRAVITY_PRESETS, DEFAULT_GRAVITY_PRESET, CUSTOM_GRAVITY_MIN } from './constants.js';
 
-const STORAGE_KEY = 'gorilla-wars-settings';
+const STORAGE_KEY = 'animal-wars-settings';
 
 export const DEFAULT_SETTINGS = {
   rounds: 3,

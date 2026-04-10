@@ -1,4 +1,4 @@
-// gorilla-wars/js/main.js
+// animal-wars/js/main.js
 import {
   CANVAS_WIDTH, CANVAS_HEIGHT, DT, STATE,
   VELOCITY_SCALE, GRAVITY_SCALE, WIND_SCALE,

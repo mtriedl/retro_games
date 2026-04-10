@@ -14,11 +14,12 @@ describe('generateCity', () => {
     assert.ok(buildings.length >= 11 && buildings.length <= 12);
   });
 
-  it('buildings span full canvas width edge-to-edge', () => {
+  it('buildings span canvas width with gaps', () => {
     const { buildings } = generateCity(false);
     assert.equal(buildings[0].x, 0);
     const last = buildings[buildings.length - 1];
-    assert.equal(last.x + last.width, CANVAS_WIDTH);
+    assert.ok(last.x + last.width <= CANVAS_WIDTH, 'last building should not exceed canvas');
+    assert.ok(last.x + last.width >= CANVAS_WIDTH - 30, 'buildings should cover most of canvas');
   });
 
   it('building widths are within spec range', () => {

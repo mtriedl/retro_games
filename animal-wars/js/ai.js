@@ -1,4 +1,4 @@
-// gorilla-wars/js/ai.js
+// animal-wars/js/ai.js
 // AI opponent using coarse-to-fine simulation search
 
 import {
