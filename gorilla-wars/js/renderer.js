@@ -286,6 +286,160 @@ export function createRenderer(ctx) {
       ctx.fillText(scoreText, CANVAS_WIDTH / 2, scoreY);
     },
 
+    drawSliderHUD(activePlayer, scores, round, totalRounds, wind) {
+      ctx.font = '10px monospace';
+
+      // Player labels + scores
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#FFD700';
+      ctx.fillText('Player 1', 8, 14);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(`Score: ${scores[0]}`, 8, 26);
+
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#FFD700';
+      ctx.fillText('Player 2', CANVAS_WIDTH - 8, 14);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(`Score: ${scores[1]}`, CANVAS_WIDTH - 8, 26);
+
+      // Round and wind on single center line, split apart
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#AAAAAA';
+      ctx.fillText(`Round ${(round || 0) + 1}/${totalRounds || 1}`, CANVAS_WIDTH / 2 - 20, 12);
+
+      ctx.textAlign = 'left';
+      const maxArrows = 5;
+      const arrowCount = Math.min(maxArrows, Math.ceil(Math.abs(wind) / 3));
+      let windStr = 'Wind: ';
+      if (wind === 0) {
+        windStr += '-';
+      } else {
+        const ch = wind > 0 ? '>' : '<';
+        for (let i = 0; i < arrowCount; i++) windStr += ch;
+      }
+      ctx.fillText(windStr, CANVAS_WIDTH / 2 + 20, 12);
+    },
+
+    drawInputBar(activePlayer, sliderAngle, sliderVelocity, isAI) {
+      const barY = INPUT_BAR_Y;
+      const barH = INPUT_BAR_HEIGHT;
+      const alpha = isAI ? 0.4 : 0.88;
+
+      // Bar background
+      ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+      ctx.fillRect(0, barY, CANVAS_WIDTH, barH);
+      ctx.strokeStyle = '#444444';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, barY);
+      ctx.lineTo(CANVAS_WIDTH, barY);
+      ctx.stroke();
+
+      const centerY = barY + barH / 2;
+
+      // Player label
+      ctx.font = '12px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = isAI ? '#888888' : '#FFD700';
+      const playerLabel = isAI ? `Player ${activePlayer + 1} (AI)` : `Player ${activePlayer + 1}`;
+      ctx.fillText(playerLabel, 60, centerY + 4);
+
+      // Angle slider
+      const angleSliderX = 130;
+      const angleSliderW = 160;
+      this._drawSlider(angleSliderX, centerY, angleSliderW, sliderAngle, 0, 180, '#FFD700', 'ANGLE', `${sliderAngle}\u00B0`);
+
+      // Velocity slider
+      const velSliderX = 340;
+      const velSliderW = 160;
+      this._drawSlider(velSliderX, centerY, velSliderW, sliderVelocity, 1, VELOCITY_MAX, '#FF4444', 'VELOCITY', String(sliderVelocity));
+
+      // FIRE button
+      const fireX = CANVAS_WIDTH - 72;
+      const fireW = FIRE_BUTTON_WIDTH;
+      const fireH = FIRE_BUTTON_HEIGHT;
+      const fireY = centerY - fireH / 2;
+
+      ctx.fillStyle = isAI ? '#441111' : '#CC0000';
+      ctx.fillRect(fireX - fireW / 2, fireY, fireW, fireH);
+      ctx.strokeStyle = isAI ? '#663333' : '#FF4444';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(fireX - fireW / 2, fireY, fireW, fireH);
+
+      ctx.fillStyle = isAI ? '#666666' : '#FFFFFF';
+      ctx.font = 'bold 12px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('FIRE!', fireX, centerY + 4);
+    },
+
+    _drawSlider(x, centerY, width, value, min, max, color, label, displayValue) {
+      const trackY = centerY + 2;
+      const trackH = 6;
+
+      // Label
+      ctx.font = '8px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#AAAAAA';
+      ctx.fillText(label, x + width / 2, centerY - 14);
+
+      // Value display
+      ctx.font = '11px monospace';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.textAlign = 'right';
+      ctx.fillText(displayValue, x - 4, centerY + 6);
+
+      // Track background
+      ctx.fillStyle = '#333333';
+      ctx.fillRect(x, trackY - trackH / 2, width, trackH);
+
+      // Track fill
+      const pct = (value - min) / (max - min);
+      ctx.fillStyle = color;
+      ctx.fillRect(x, trackY - trackH / 2, width * pct, trackH);
+
+      // Thumb
+      const thumbX = x + width * pct;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(thumbX, trackY, SLIDER_THUMB_RADIUS, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(thumbX, trackY, SLIDER_THUMB_RADIUS, 0, Math.PI * 2);
+      ctx.stroke();
+    },
+
+    getSliderGeometry() {
+      const centerY = INPUT_BAR_Y + INPUT_BAR_HEIGHT / 2;
+      const trackY = centerY + 2;
+      return {
+        angle: { which: 'angle', x: 130, y: trackY, width: 160, min: 0, max: 180 },
+        velocity: { which: 'velocity', x: 340, y: trackY, width: 160, min: 1, max: VELOCITY_MAX },
+        fire: {
+          x: CANVAS_WIDTH - 72 - FIRE_BUTTON_WIDTH / 2,
+          y: centerY - FIRE_BUTTON_HEIGHT / 2,
+          width: FIRE_BUTTON_WIDTH,
+          height: FIRE_BUTTON_HEIGHT,
+        },
+      };
+    },
+
+    drawPauseButton() {
+      const x = PAUSE_BUTTON_X;
+      const y = PAUSE_BUTTON_Y;
+      const w = PAUSE_BUTTON_W;
+      const h = PAUSE_BUTTON_H;
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      ctx.fillRect(x, y, w, h);
+      ctx.fillStyle = '#AAAAAA';
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('| |', x + w / 2, y + h - 4);
+    },
+
     drawBananaTracker(bananaX) {
       ctx.fillStyle = '#FFFF00';
       ctx.font = '8px monospace';
