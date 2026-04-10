@@ -5,7 +5,14 @@ import {
   WIND_MIN, WIND_MAX,
   EXPLOSION_BUILDING_RADIUS, EXPLOSION_GORILLA_RADIUS,
   GORILLA_FRAME_SIZE, BANANA_RADIUS,
+  GORILLA_COLLISION_WIDTH, GORILLA_COLLISION_HEIGHT,
   GRAVITY_PRESETS,
+  DEFAULT_ANGLE, DEFAULT_VELOCITY, VELOCITY_MAX,
+  INPUT_BAR_Y, INPUT_BAR_HEIGHT,
+  SLIDER_THUMB_HIT_RADIUS,
+  MENU_BUTTON_MIN_H,
+  SETTINGS_ROW_H, SETTINGS_ROW_GAP, SETTINGS_ARROW_W, SETTINGS_ARROW_HIT,
+  PAUSE_BUTTON_X, PAUSE_BUTTON_Y, PAUSE_BUTTON_HIT_SIZE,
 } from './constants.js';
 import { loadSettings, saveSettings, getGravityValue } from './settings.js';
 import { generateCity, initHeightmap, carveExplosion } from './buildings.js';
@@ -16,8 +23,20 @@ import { createAudioEngine } from './audio.js';
 import { createRenderer } from './renderer.js';
 import { calculateAIShot } from './ai.js';
 
+const VICTORY_FRAMES = [
+  [0, 1, 3, 2, 0, 1, 3, 0, 3, 0], // Player 1
+  [0, 2, 3, 1, 0, 2, 3, 0, 3, 0], // Player 2
+];
+const VICTORY_FRAME_DURATION = 0.3;
+
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
+
+// Hi-DPI canvas for crisp font rendering
+const dpr = window.devicePixelRatio || 1;
+canvas.width = CANVAS_WIDTH * dpr;
+canvas.height = CANVAS_HEIGHT * dpr;
+ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 // --- Module instances ---
 const renderer = createRenderer(ctx);
@@ -62,11 +81,21 @@ const game = {
   customGravityInput: '',
   buildingAnimProgress: 0,
   roundEndTimer: 0,
+  roundEndDelay: 0,
   roundEndWinner: -1,
+  victoryAnimIndex: 0,
+  victoryAnimTimer: 0,
   aiThinkTimer: 0,
   aiLastShot: null,
   blinkTimer: 0,
   blinkOn: true,
+  sliderValues: [
+    { angle: DEFAULT_ANGLE, velocity: DEFAULT_VELOCITY },
+    { angle: DEFAULT_ANGLE, velocity: DEFAULT_VELOCITY },
+  ],
+  sliderFocus: 'angle', // 'angle' | 'velocity' | 'fire'
+  activeSliderDrag: null, // null | 'angle' | 'velocity'
+  touchStartPos: null, // {x, y} for tap-vs-drag detection
 };
 
 // --- Init ---
@@ -152,17 +181,34 @@ function update(dt) {
       updateExplosions(dt);
       break;
 
-    case STATE.ROUND_END:
-      game.roundEndTimer -= dt;
-      if (game.roundEndTimer <= 0) {
-        game.round++;
-        if (game.round >= game.totalRounds) {
-          game.state = STATE.GAME_OVER;
-        } else {
-          startRound();
+    case STATE.ROUND_END: {
+      // Victory sprite cycle
+      const vFrames = VICTORY_FRAMES[game.roundEndWinner];
+      if (vFrames && game.victoryAnimIndex < vFrames.length) {
+        game.victoryAnimTimer += dt;
+        if (game.victoryAnimTimer >= VICTORY_FRAME_DURATION) {
+          game.victoryAnimTimer -= VICTORY_FRAME_DURATION;
+          game.victoryAnimIndex++;
+          if (game.victoryAnimIndex < vFrames.length) {
+            game.gorillas[game.roundEndWinner].frame = vFrames[game.victoryAnimIndex];
+          }
+        }
+      }
+      if (game.roundEndDelay > 0) {
+        game.roundEndDelay -= dt;
+      } else {
+        game.roundEndTimer -= dt;
+        if (game.roundEndTimer <= 0) {
+          if (game.round + 1 >= game.totalRounds) {
+            game.state = STATE.GAME_OVER;
+          } else {
+            game.round++;
+            startRound();
+          }
         }
       }
       break;
+    }
   }
 
   // Update particles
@@ -177,7 +223,7 @@ function update(dt) {
 
   // Fade previous shot trail
   if (game.trailAlpha > 0 && game.state !== STATE.PROJECTILE_FLIGHT) {
-    game.trailAlpha -= dt * 0.5;
+    game.trailAlpha -= dt * 0.15;
     if (game.trailAlpha < 0) game.trailAlpha = 0;
   }
 }
@@ -191,17 +237,29 @@ function updateProjectile(dt) {
   // Record trail
   game.shotTrail.push({ x: game.banana.x, y: game.banana.y });
 
+  // Clear owner once banana leaves the throwing gorilla's collision zone
+  if (game.banana.ownerIndex >= 0) {
+    const g = game.gorillas[game.banana.ownerIndex];
+    const hw = GORILLA_COLLISION_WIDTH / 2;
+    const bx = game.banana.x, by = game.banana.y, br = BANANA_RADIUS;
+    if (bx + br < g.x - hw || bx - br > g.x + hw || by + br < g.y - GORILLA_COLLISION_HEIGHT || by - br > g.y) {
+      game.banana.ownerIndex = -1;
+    }
+  }
+
   // Check collisions
   const result = checkCollisions(
     { x: game.banana.x, y: game.banana.y, radius: BANANA_RADIUS },
     game.heightmap,
     game.gorillas,
-    renderer.getCelestialBounds()
+    renderer.getCelestialBounds(),
+    game.banana.ownerIndex
   );
 
   switch (result.type) {
     case 'miss':
       game.banana.active = false;
+      game.gorillas[game.activePlayer].frame = 0;
       audio.playMiss();
       if (isAITurn() && game.aiLastShot) {
         const target = game.gorillas[0];
@@ -217,6 +275,7 @@ function updateProjectile(dt) {
 
     case 'building':
       game.banana.active = false;
+      game.gorillas[game.activePlayer].frame = 0;
       audio.playBuildingHit();
       if (isAITurn() && game.aiLastShot) {
         const target = game.gorillas[0];
@@ -232,6 +291,7 @@ function updateProjectile(dt) {
 
     case 'gorilla':
       game.banana.active = false;
+      game.gorillas[game.activePlayer].frame = 0;
       audio.playGorillaHit();
       game.gorillas[result.gorillaIndex].visible = false;
       spawnExplosion(result.x, result.y, EXPLOSION_GORILLA_RADIUS);
@@ -239,7 +299,7 @@ function updateProjectile(dt) {
       game.previousTrail = [...game.shotTrail];
       game.trailAlpha = 1;
       game.shotTrail = [];
-      game.roundEndWinner = game.activePlayer;
+      game.roundEndWinner = 1 - result.gorillaIndex;
       game.state = STATE.IMPACT;
       break;
 
@@ -270,9 +330,11 @@ function updateExplosions(dt) {
       // Gorilla hit — end round
       game.scores[game.roundEndWinner]++;
       audio.playVictory();
-      // Show victory animation
-      const winnerGorilla = game.gorillas[game.roundEndWinner];
-      winnerGorilla.frame = 3; // victory
+      // Start victory animation cycle
+      game.victoryAnimIndex = 0;
+      game.victoryAnimTimer = 0;
+      game.gorillas[game.roundEndWinner].frame = VICTORY_FRAMES[game.roundEndWinner][0];
+      game.roundEndDelay = 3.0;
       game.roundEndTimer = 2.0;
       game.state = STATE.ROUND_END;
     } else {
@@ -315,7 +377,11 @@ function handleKey(key) {
     case STATE.PLAYER_INPUT:
       if (key === 'Escape') { enterPause(); break; }
       if (isAITurn()) break;
-      handlePlayerInputKey(key);
+      if (settings.inputMethod === 'sliders') {
+        handleSliderInputKey(key);
+      } else {
+        handlePlayerInputKey(key);
+      }
       break;
 
     case STATE.PROJECTILE_FLIGHT:
@@ -364,7 +430,12 @@ function handleTitleAction(action) {
       game.state = STATE.SETTINGS;
       break;
     case 'fullscreen':
-      canvas.requestFullscreen?.();
+      (async () => {
+        try {
+          await document.documentElement.requestFullscreen();
+          await screen.orientation.lock('landscape').catch(() => {});
+        } catch { /* fullscreen unsupported */ }
+      })();
       break;
   }
 }
@@ -372,7 +443,7 @@ function handleTitleAction(action) {
 function handlePauseAction(action) {
   switch (action) {
     case 'resume':
-      game.state = game.previousState;
+      game.state = game.pausedFromState;
       break;
     case 'restart':
       startRound();
@@ -392,18 +463,20 @@ function handlePauseAction(action) {
 }
 
 function getSettingsItemCount() {
-  return settings.gravityPreset === 'Custom' ? 8 : 7;
+  return settings.gravityPreset === 'Custom' ? 10 : 9;
 }
 
 function getSettingsItemName(index) {
   const isCustom = settings.gravityPreset === 'Custom';
   const items = [
+    'inputMethod',
     'rounds',
     'gravityPreset',
     ...(isCustom ? ['customGravity'] : []),
     'player2Mode',
     'shotTrail',
     'aimPreview',
+    'dynamicAimPreview',
     'volume',
     'back',
   ];
@@ -482,6 +555,13 @@ function handleSettingsKey(key) {
   const dir = key === 'ArrowRight' ? 1 : -1;
 
   switch (itemName) {
+    case 'inputMethod': {
+      const options = ['classic', 'sliders'];
+      const idx = options.indexOf(settings.inputMethod);
+      const newIdx = (idx + dir + options.length) % options.length;
+      settings.inputMethod = options[newIdx];
+      break;
+    }
     case 'rounds': {
       const options = [1, 3, 5, 10];
       const idx = options.indexOf(settings.rounds);
@@ -515,6 +595,9 @@ function handleSettingsKey(key) {
     case 'aimPreview':
       settings.aimPreview = !settings.aimPreview;
       break;
+    case 'dynamicAimPreview':
+      settings.dynamicAimPreview = !settings.dynamicAimPreview;
+      break;
     case 'volume': {
       settings.volume = Math.round(Math.min(1, Math.max(0, settings.volume + dir * 0.1)) * 10) / 10;
       audio.setVolume(settings.volume);
@@ -536,6 +619,12 @@ function handlePlayerInputKey(key) {
     game.lastInputs[game.activePlayer].angle = result.angle;
     game.inputField = 'velocity';
     game.inputValue = '';
+  } else if (result.type === 'back_to_angle') {
+    // Restore confirmed angle as editable text
+    input.state.value = game.confirmedAngle !== null ? String(game.confirmedAngle) : '';
+    game.inputField = 'angle';
+    game.inputValue = input.state.value;
+    game.confirmedAngle = null;
   } else if (result.type === 'fire') {
     game.lastInputs[game.activePlayer].velocity = result.velocity;
     fireBanana(game.confirmedAngle, result.velocity);
@@ -547,9 +636,38 @@ function handlePlayerInputKey(key) {
   // Update aim preview angle while typing
   if (game.inputField === 'angle' && game.inputValue !== '') {
     const parsed = parseInt(game.inputValue, 10);
-    game.aimPreviewAngle = isNaN(parsed) ? null : Math.max(0, Math.min(90, parsed));
+    game.aimPreviewAngle = isNaN(parsed) ? null : Math.max(0, Math.min(180, parsed));
   } else if (game.inputField !== 'angle') {
     game.aimPreviewAngle = null;
+  }
+}
+
+function handleSliderInputKey(key) {
+  if (key === 'Tab') {
+    const order = ['angle', 'velocity', 'fire'];
+    const idx = order.indexOf(game.sliderFocus);
+    game.sliderFocus = order[(idx + 1) % order.length];
+    return;
+  }
+
+  if (key === 'Enter') {
+    if (game.sliderFocus === 'fire') {
+      const sv = game.sliderValues[game.activePlayer];
+      game.lastInputs[game.activePlayer].angle = sv.angle;
+      game.lastInputs[game.activePlayer].velocity = sv.velocity;
+      fireBanana(sv.angle, sv.velocity);
+    }
+    return;
+  }
+
+  const sv = game.sliderValues[game.activePlayer];
+  if (key === 'ArrowLeft' || key === 'ArrowRight') {
+    const delta = key === 'ArrowRight' ? 1 : -1;
+    if (game.sliderFocus === 'angle') {
+      sv.angle = Math.max(0, Math.min(180, sv.angle + delta));
+    } else if (game.sliderFocus === 'velocity') {
+      sv.velocity = Math.max(1, Math.min(VELOCITY_MAX, sv.velocity + delta));
+    }
   }
 }
 
@@ -617,6 +735,11 @@ function startRound() {
   game.trailAlpha = 0;
   game.celestialSurprised = false;
   game.roundEndWinner = -1;
+  game.lastInputs = [{ angle: null, velocity: null }, { angle: null, velocity: null }];
+  game.sliderValues = [
+    { angle: DEFAULT_ANGLE, velocity: DEFAULT_VELOCITY },
+    { angle: DEFAULT_ANGLE, velocity: DEFAULT_VELOCITY },
+  ];
 
   game.activePlayer = game.startingPlayer;
   game.startingPlayer = 1 - game.startingPlayer; // alternate next round
@@ -632,6 +755,7 @@ function fireBanana(angle, velocity) {
     ...createProjectile(g.x, startY, angle, velocity, game.activePlayer),
     rotation: 0,
     active: true,
+    ownerIndex: game.activePlayer,
   };
 
   // Throw animation: P1 throws right (frame 2), P2 throws left (frame 1)
@@ -643,7 +767,7 @@ function fireBanana(angle, velocity) {
 }
 
 function enterPause() {
-  game.previousState = game.state;
+  game.pausedFromState = game.state;
   game.state = STATE.PAUSED;
   game.menuIndex = 0;
 }
@@ -655,8 +779,8 @@ function resetInput() {
   game.confirmedAngle = null;
   game.aimPreviewAngle = null;
   game.aiThinkTimer = 0;
-  // Reset gorilla frame to idle
-  game.gorillas[game.activePlayer].frame = 0;
+  game.sliderFocus = 'angle';
+  game.activeSliderDrag = null;
 }
 
 function isAITurn() {
@@ -680,11 +804,13 @@ function handleAITurn(dt) {
     game.aiLastShot || null
   );
 
-  game.lastInputs[1].angle = shot.angle;
-  game.lastInputs[1].velocity = shot.velocity;
-  game.confirmedAngle = shot.angle;
-  fireBanana(shot.angle, shot.velocity);
-  game.aiLastShot = { angle: shot.angle, velocity: shot.velocity, missDirection: 0 };
+  const aiAngle = Math.round(shot.angle);
+  const aiVelocity = Math.round(shot.velocity);
+  game.lastInputs[1].angle = aiAngle;
+  game.lastInputs[1].velocity = aiVelocity;
+  game.confirmedAngle = aiAngle;
+  fireBanana(aiAngle, aiVelocity);
+  game.aiLastShot = { angle: aiAngle, velocity: aiVelocity, missDirection: 0 };
   game.aiThinkTimer = 0;
 }
 
@@ -708,7 +834,7 @@ function render(alpha) {
     case STATE.IMPACT:
     case STATE.ROUND_END:
       drawGameScene(alpha);
-      if (game.state === STATE.ROUND_END) {
+      if (game.state === STATE.ROUND_END && game.roundEndDelay <= 0) {
         renderer.drawRoundEnd(game.roundEndWinner, game.scores);
       }
       break;
@@ -732,30 +858,68 @@ function render(alpha) {
 
 function drawGameScene(alpha) {
   renderer.drawSky(game.isNight);
-  renderer.drawSunMoon(game.isNight, game.celestialSurprised);
-  renderer.drawWindIndicator(game.wind);
+
+  if (settings.inputMethod === 'sliders') {
+    renderer.drawSliderHUD(game.activePlayer, game.scores, game.round, game.totalRounds, game.wind);
+  } else {
+    renderer.drawWindIndicator(game.wind);
+  }
+
   renderer.drawBuildingsFromHeightmap(game.buildings, game.heightmap);
 
   for (let i = 0; i < 2; i++) {
     renderer.drawGorilla(game.gorillas[i], spriteFrames, game.gorillas[i].frame);
   }
 
-  // Shot trail (previous)
-  if (game.trailAlpha > 0 && settings.shotTrail) {
-    renderer.drawShotTrail(game.previousTrail, game.trailAlpha);
+  // Shot trail — live during flight, fading previous after
+  if (settings.shotTrail) {
+    if (game.banana.active && game.shotTrail.length > 1) {
+      renderer.drawShotTrail(game.shotTrail, 1);
+    }
+    if (game.trailAlpha > 0 && game.previousTrail.length > 1) {
+      renderer.drawShotTrail(game.previousTrail, game.trailAlpha);
+    }
   }
 
-  // Aim preview (show during angle typing and after angle confirmed)
+  // Aim preview
   if (game.state === STATE.PLAYER_INPUT && settings.aimPreview) {
-    const previewAngle = game.inputField === 'angle' ? game.aimPreviewAngle : game.confirmedAngle;
+    let previewAngle;
+    if (settings.inputMethod === 'sliders') {
+      previewAngle = game.sliderValues[game.activePlayer].angle;
+    } else {
+      previewAngle = game.inputField === 'angle' ? game.aimPreviewAngle : game.confirmedAngle;
+    }
     if (previewAngle !== null && previewAngle !== undefined) {
       renderer.drawAimPreview(game.gorillas[game.activePlayer], previewAngle, game.activePlayer);
     }
   }
 
-  renderer.drawBanana(game.banana, alpha);
+  // Dynamic aim preview
+  if (game.state === STATE.PLAYER_INPUT && settings.dynamicAimPreview) {
+    let dynAngle, dynVel;
+    if (settings.inputMethod === 'sliders') {
+      dynAngle = game.sliderValues[game.activePlayer].angle;
+      dynVel = game.sliderValues[game.activePlayer].velocity;
+    } else {
+      dynAngle = game.inputField === 'angle' ? game.aimPreviewAngle : game.confirmedAngle;
+      dynVel = null;
+      if (game.inputField === 'velocity' && game.inputValue !== '') {
+        dynVel = parseInt(game.inputValue, 10);
+      } else if (game.inputField === 'velocity' && game.lastInputs[game.activePlayer].velocity !== null) {
+        dynVel = game.lastInputs[game.activePlayer].velocity;
+      }
+    }
+    if (dynAngle !== null && dynAngle !== undefined && dynVel !== null && !isNaN(dynVel) && dynVel > 0) {
+      renderer.drawDynamicAimPreview(
+        game.gorillas[game.activePlayer], dynAngle, dynVel,
+        game.activePlayer, getGravityValue(settings)
+      );
+    }
+  }
 
-  // Banana tracker when above viewport
+  renderer.drawBanana(game.banana, alpha);
+  renderer.drawSunMoon(game.isNight, game.celestialSurprised);
+
   if (game.banana.active && game.banana.y < 0) {
     renderer.drawBananaTracker(game.banana.x);
   }
@@ -763,10 +927,24 @@ function drawGameScene(alpha) {
   for (const e of game.explosions) renderer.drawExplosion(e);
   renderer.drawParticles(game.particles);
 
-  renderer.drawHUD(
-    game.activePlayer, game.inputField, game.inputValue,
-    game.lastInputs, game.scores, game.blinkOn
-  );
+  if (settings.inputMethod === 'sliders') {
+    // Draw input bar during PLAYER_INPUT
+    if (game.state === STATE.PLAYER_INPUT) {
+      const sv = game.sliderValues[game.activePlayer];
+      renderer.drawInputBar(game.activePlayer, sv.angle, sv.velocity, isAITurn());
+    }
+  } else {
+    renderer.drawHUD(
+      game.activePlayer, game.inputField, game.inputValue,
+      game.lastInputs, game.scores, game.blinkOn,
+      game.round, game.totalRounds
+    );
+  }
+
+  // Pause button during gameplay
+  if (game.state === STATE.PLAYER_INPUT || game.state === STATE.PROJECTILE_FLIGHT) {
+    renderer.drawPauseButton();
+  }
 }
 
 // --- Boot ---
