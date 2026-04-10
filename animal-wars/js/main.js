@@ -437,9 +437,12 @@ function handleTitleAction(action) {
     case 'settings':
       game.settingsFrom = 'title';
       game.settingsIndex = 0;
+      game.settingsScrollOffset = 0;
       game.customGravityInput = String(settings.customGravity);
       game.previousState = game.state;
       game.state = STATE.SETTINGS;
+      loadCharacterPreview(settings.character).then(img => { game.characterPreviewSprite = img; });
+      loadProjectileSprite(settings.projectile).then(img => { projectileSprite = img; });
       break;
     case 'fullscreen':
       (async () => {
@@ -462,9 +465,12 @@ function handlePauseAction(action) {
     case 'settings':
       game.settingsFrom = 'pause';
       game.settingsIndex = 0;
+      game.settingsScrollOffset = 0;
       game.customGravityInput = String(settings.customGravity);
       game.previousState = game.state;
       game.state = STATE.SETTINGS;
+      loadCharacterPreview(settings.character).then(img => { game.characterPreviewSprite = img; });
+      loadProjectileSprite(settings.projectile).then(img => { projectileSprite = img; });
       break;
     case 'quit':
       game.state = STATE.TITLE_SCREEN;
@@ -513,6 +519,7 @@ function handleSettingsKey(key) {
 
   // Enter on Back
   if (key === 'Enter' && itemName === 'back') {
+    createCharacterSprites(settings.character).then(frames => { spriteFrames = frames; });
     if (game.settingsFrom === 'title') {
       game.state = STATE.TITLE_SCREEN;
       game.menuIndex = 0;
@@ -525,6 +532,7 @@ function handleSettingsKey(key) {
 
   // Escape also goes back
   if (key === 'Escape') {
+    createCharacterSprites(settings.character).then(frames => { spriteFrames = frames; });
     if (game.settingsFrom === 'title') {
       game.state = STATE.TITLE_SCREEN;
       game.menuIndex = 0;
@@ -600,6 +608,13 @@ function handleSettingsKey(key) {
       const idx = options.indexOf(settings.player2Mode);
       const newIdx = (idx + dir + options.length) % options.length;
       settings.player2Mode = options[newIdx];
+      break;
+    }
+    case 'character': {
+      const idx = CHARACTER_OPTIONS.indexOf(settings.character);
+      const newIdx = (idx + dir + CHARACTER_OPTIONS.length) % CHARACTER_OPTIONS.length;
+      settings.character = CHARACTER_OPTIONS[newIdx];
+      loadCharacterPreview(settings.character).then(img => { game.characterPreviewSprite = img; });
       break;
     }
     case 'shotTrail':
