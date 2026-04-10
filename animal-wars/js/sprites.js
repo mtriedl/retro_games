@@ -1,10 +1,3 @@
-const SPRITE_PATHS = [
-  'assets/images/gorilla-normal.png',
-  'assets/images/gorilla-throw-p2.png',
-  'assets/images/gorilla-throw-p1.png',
-  'assets/images/gorilla-victory.png',
-];
-
 function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -14,8 +7,44 @@ function loadImage(src) {
   });
 }
 
-export async function createGorillaSprites() {
-  return Promise.all(SPRITE_PATHS.map(loadImage));
+function characterPaths(name) {
+  const base = `assets/images/${name.toLowerCase()}`;
+  return [
+    `${base}-normal.png`,
+    `${base}-throw-p2.png`,
+    `${base}-throw-p1.png`,
+    `${base}-victory.png`,
+  ];
+}
+
+export async function createCharacterSprites(characterName = 'Gorilla') {
+  const paths = characterPaths(characterName);
+  try {
+    return await Promise.all(paths.map(loadImage));
+  } catch {
+    if (characterName !== 'Gorilla') {
+      console.warn(`Failed to load ${characterName} sprites, falling back to Gorilla`);
+      return Promise.all(characterPaths('Gorilla').map(loadImage));
+    }
+    throw new Error('Failed to load Gorilla sprites');
+  }
+}
+
+export async function loadCharacterPreview(characterName = 'Gorilla') {
+  const src = `assets/images/${characterName.toLowerCase()}-normal.png`;
+  try {
+    return await loadImage(src);
+  } catch {
+    if (characterName !== 'Gorilla') {
+      console.warn(`Failed to load ${characterName} preview, falling back to Gorilla`);
+      try {
+        return await loadImage('assets/images/gorilla-normal.png');
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
 }
 
 export async function loadProjectileSprite(name) {
