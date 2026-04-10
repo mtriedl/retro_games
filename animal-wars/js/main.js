@@ -1094,9 +1094,10 @@ function startRound() {
 
 function fireBanana(angle, velocity) {
   const g = game.gorillas[game.activePlayer];
-  const startY = g.y - GORILLA_FRAME_SIZE / 2; // launch from gorilla center
+  const startX = g.x + (game.activePlayer === 0 ? GORILLA_FRAME_SIZE / 2 : -GORILLA_FRAME_SIZE / 2);
+  const startY = g.y - GORILLA_FRAME_SIZE / 2; // launch from gorilla center height
   game.banana = {
-    ...createProjectile(g.x, startY, angle, velocity, game.activePlayer),
+    ...createProjectile(startX, startY, angle, velocity, game.activePlayer),
     rotation: 0,
     active: true,
     ownerIndex: game.activePlayer,
