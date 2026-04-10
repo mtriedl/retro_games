@@ -12,7 +12,7 @@ import {
   SLIDER_THUMB_HIT_RADIUS,
   MENU_BUTTON_MIN_H,
   SETTINGS_ROW_H, SETTINGS_ROW_GAP, SETTINGS_ARROW_W, SETTINGS_ARROW_HIT,
-  PAUSE_BUTTON_X, PAUSE_BUTTON_Y, PAUSE_BUTTON_HIT_SIZE,
+  PAUSE_BUTTON_CX, PAUSE_BUTTON_CY, PAUSE_BUTTON_HIT_RADIUS,
 } from './constants.js';
 import { loadSettings, saveSettings, getGravityValue } from './settings.js';
 import { generateCity, initHeightmap, carveExplosion } from './buildings.js';
@@ -659,16 +659,10 @@ function handleSliderInputKey(key) {
   }
 
   if (key === 'Enter') {
-    if (game.sliderFocus === 'angle') {
-      game.sliderFocus = 'velocity';
-    } else if (game.sliderFocus === 'velocity') {
-      game.sliderFocus = 'fire';
-    } else if (game.sliderFocus === 'fire') {
-      const sv = game.sliderValues[game.activePlayer];
-      game.lastInputs[game.activePlayer].angle = sv.angle;
-      game.lastInputs[game.activePlayer].velocity = sv.velocity;
-      fireBanana(sv.angle, sv.velocity);
-    }
+    const sv = game.sliderValues[game.activePlayer];
+    game.lastInputs[game.activePlayer].angle = sv.angle;
+    game.lastInputs[game.activePlayer].velocity = sv.velocity;
+    fireBanana(sv.angle, sv.velocity);
     return;
   }
 
@@ -806,6 +800,29 @@ function handleClick(e) {
       }
     }
   }
+
+  // Fire button click
+  if (game.state === STATE.PLAYER_INPUT && settings.inputMethod === 'sliders' && !isAITurn()) {
+    const geo = renderer.getSliderGeometry();
+    const fb = geo.fire;
+    if (cx >= fb.x && cx <= fb.x + fb.width && cy >= fb.y && cy <= fb.y + fb.height) {
+      const sv = game.sliderValues[game.activePlayer];
+      game.lastInputs[game.activePlayer].angle = sv.angle;
+      game.lastInputs[game.activePlayer].velocity = sv.velocity;
+      fireBanana(sv.angle, sv.velocity);
+      return;
+    }
+  }
+
+  // Pause button click (circular hit test)
+  if (game.state === STATE.PLAYER_INPUT || game.state === STATE.PROJECTILE_FLIGHT) {
+    const dx = cx - PAUSE_BUTTON_CX;
+    const dy = cy - PAUSE_BUTTON_CY;
+    if (dx * dx + dy * dy <= PAUSE_BUTTON_HIT_RADIUS * PAUSE_BUTTON_HIT_RADIUS) {
+      enterPause();
+      return;
+    }
+  }
 }
 
 function handleMouseDown(e) {
@@ -910,12 +927,11 @@ function handleTouchEnd(e) {
   }
   game.touchStartPos = null;
 
-  // Pause button hit test
+  // Pause button hit test (circular)
   if (game.state === STATE.PLAYER_INPUT || game.state === STATE.PROJECTILE_FLIGHT) {
-    const px = PAUSE_BUTTON_X;
-    const py = PAUSE_BUTTON_Y;
-    const hitSize = PAUSE_BUTTON_HIT_SIZE;
-    if (x >= px - (hitSize - 24) && x <= px + 24 && y >= py && y <= py + hitSize) {
+    const dx = x - PAUSE_BUTTON_CX;
+    const dy = y - PAUSE_BUTTON_CY;
+    if (dx * dx + dy * dy <= PAUSE_BUTTON_HIT_RADIUS * PAUSE_BUTTON_HIT_RADIUS) {
       enterPause();
       return;
     }
@@ -1203,8 +1219,10 @@ function drawGameScene(alpha) {
     );
   }
 
-  // Pause button during gameplay
-  if (game.state === STATE.PLAYER_INPUT || game.state === STATE.PROJECTILE_FLIGHT) {
+  // Pause button — in slider mode it's part of the input bar (lower-left),
+  // so only show during PLAYER_INPUT when the bar is visible.
+  // During PROJECTILE_FLIGHT, Escape key still works.
+  if (game.state === STATE.PLAYER_INPUT) {
     renderer.drawPauseButton();
   }
 }

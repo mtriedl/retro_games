@@ -44,7 +44,7 @@ export const WIND_MIN = -15;
 export const WIND_MAX = 15;
 
 // Slider input defaults
-export const VELOCITY_MAX = 500;
+export const VELOCITY_MAX = 250;
 export const DEFAULT_ANGLE = 45;
 export const DEFAULT_VELOCITY = 50;
 
@@ -67,12 +67,11 @@ export const SETTINGS_ROW_GAP = 4;
 export const SETTINGS_ARROW_W = 28;
 export const SETTINGS_ARROW_HIT = 44;
 
-// Pause button (top-right corner)
-export const PAUSE_BUTTON_X = CANVAS_WIDTH - 28;
-export const PAUSE_BUTTON_Y = 4;
-export const PAUSE_BUTTON_W = 24;
-export const PAUSE_BUTTON_H = 16;
-export const PAUSE_BUTTON_HIT_SIZE = 44;
+// Pause button (circular, lower-left of input bar)
+export const PAUSE_BUTTON_RADIUS = 14;
+export const PAUSE_BUTTON_CX = 22;
+export const PAUSE_BUTTON_CY = INPUT_BAR_Y + INPUT_BAR_HEIGHT / 2;
+export const PAUSE_BUTTON_HIT_RADIUS = 22;
 
 // Colors
 export const SKY_DAY_COLOR = '#0000AA';

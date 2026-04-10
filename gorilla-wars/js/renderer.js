@@ -11,7 +11,7 @@ import {
   FIRE_BUTTON_WIDTH, FIRE_BUTTON_HEIGHT,
   MENU_BUTTON_MIN_H,
   SETTINGS_ROW_H, SETTINGS_ROW_GAP, SETTINGS_ARROW_W,
-  PAUSE_BUTTON_X, PAUSE_BUTTON_Y, PAUSE_BUTTON_W, PAUSE_BUTTON_H,
+  PAUSE_BUTTON_RADIUS, PAUSE_BUTTON_CX, PAUSE_BUTTON_CY,
 } from './constants.js';
 
 /**
@@ -427,17 +427,25 @@ export function createRenderer(ctx) {
     },
 
     drawPauseButton() {
-      const x = PAUSE_BUTTON_X;
-      const y = PAUSE_BUTTON_Y;
-      const w = PAUSE_BUTTON_W;
-      const h = PAUSE_BUTTON_H;
+      const cx = PAUSE_BUTTON_CX;
+      const cy = PAUSE_BUTTON_CY;
+      const r = PAUSE_BUTTON_RADIUS;
 
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-      ctx.fillRect(x, y, w, h);
+      // Circle background
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.10)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#555555';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Pause bars
       ctx.fillStyle = '#AAAAAA';
-      ctx.font = '10px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('| |', x + w / 2, y + h - 4);
+      ctx.fillRect(cx - 5, cy - 5, 3, 10);
+      ctx.fillRect(cx + 2, cy - 5, 3, 10);
     },
 
     drawBananaTracker(bananaX) {

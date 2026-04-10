@@ -53,7 +53,7 @@ export function createInputHandler() {
       }
 
       if (state.field === 'velocity') {
-        const velocity = Math.max(1, Math.min(500, parsed));
+        const velocity = Math.max(1, Math.min(250, parsed));
         state.field = 'done';
         state.value = '';
         return { type: 'fire', velocity };

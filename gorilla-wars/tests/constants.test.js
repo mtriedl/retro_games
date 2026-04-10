@@ -65,8 +65,8 @@ describe('constants', () => {
     assert.equal(C.VELOCITY_SCALE, 5.0);
   });
 
-  it('VELOCITY_MAX is 500', () => {
-    assert.equal(C.VELOCITY_MAX, 500);
+  it('VELOCITY_MAX is 250', () => {
+    assert.equal(C.VELOCITY_MAX, 250);
   });
 
   it('DEFAULT_VELOCITY is 50', () => {
