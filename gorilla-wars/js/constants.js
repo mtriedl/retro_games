@@ -33,7 +33,7 @@ export const GORILLA_COLLISION_HEIGHT = 28;
 export const GORILLA_PLACEMENT_RANGE = 4;
 
 // Banana
-export const BANANA_RADIUS = 4;
+export const BANANA_RADIUS = 8;
 
 // Explosions
 export const EXPLOSION_BUILDING_RADIUS = 15;
@@ -80,6 +80,8 @@ export const WINDOW_LIT_COLOR = '#FFFF55';
 export const WINDOW_UNLIT_COLOR = '#555555';
 export const BANANA_COLOR = '#FFFF00';
 export const BANANA_TIP_COLOR = '#AA5500';
+export const PROJECTILE_SPRITE_SIZE = 16;
+export const PROJECTILE_OPTIONS = ['Banana'];
 
 export const EGA_BUILDING_COLORS = [
   '#AA0000', '#0000AA', '#00AA00', '#00AAAA',

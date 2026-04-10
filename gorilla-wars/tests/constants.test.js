@@ -30,7 +30,16 @@ describe('constants', () => {
   });
 
   it('exports banana radius', () => {
-    assert.equal(C.BANANA_RADIUS, 4);
+    assert.equal(C.BANANA_RADIUS, 8);
+  });
+
+  it('exports projectile sprite size', () => {
+    assert.equal(C.PROJECTILE_SPRITE_SIZE, 16);
+  });
+
+  it('exports projectile options with Banana as first entry', () => {
+    assert.ok(Array.isArray(C.PROJECTILE_OPTIONS));
+    assert.equal(C.PROJECTILE_OPTIONS[0], 'Banana');
   });
 
   it('exports 13 gravity presets with Earth as default', () => {
