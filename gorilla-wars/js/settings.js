@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS = {
   shotTrail: true,
   aimPreview: false,
   dynamicAimPreview: false,
+  projectile: 'Banana',
   volume: 0.5,
 };
 
