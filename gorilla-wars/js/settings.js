@@ -7,16 +7,26 @@ export const DEFAULT_SETTINGS = {
   gravityPreset: DEFAULT_GRAVITY_PRESET,
   customGravity: 9.8,
   player2Mode: 'human',
+  inputMethod: 'classic',
   shotTrail: true,
   aimPreview: false,
+  dynamicAimPreview: false,
   volume: 0.5,
 };
 
 export function loadSettings() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULT_SETTINGS };
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    const base = { ...DEFAULT_SETTINGS };
+    const stored = raw ? JSON.parse(raw) : null;
+    if (stored) {
+      Object.assign(base, stored);
+    }
+    // Auto-detect input method if no stored preference
+    if (!stored || !stored.hasOwnProperty('inputMethod')) {
+      base.inputMethod = ('ontouchstart' in globalThis) ? 'sliders' : 'classic';
+    }
+    return base;
   } catch {
     return { ...DEFAULT_SETTINGS };
   }

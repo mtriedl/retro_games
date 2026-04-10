@@ -54,4 +54,31 @@ describe('settings', () => {
     const s = { ...DEFAULT_SETTINGS, gravityPreset: 'Custom', customGravity: 0.0 };
     assert.equal(getGravityValue(s), 0.1);
   });
+
+  it('DEFAULT_SETTINGS includes inputMethod as classic', () => {
+    assert.equal(DEFAULT_SETTINGS.inputMethod, 'classic');
+  });
+
+  it('loadSettings defaults inputMethod to classic when no ontouchstart', () => {
+    globalThis.ontouchstart = undefined;
+    delete globalThis.ontouchstart;
+    const s = loadSettings();
+    assert.equal(s.inputMethod, 'classic');
+  });
+
+  it('loadSettings defaults inputMethod to sliders on touch devices', () => {
+    globalThis.ontouchstart = null; // simulates touch device
+    localStorage.clear();
+    const freshLoad = loadSettings();
+    assert.equal(freshLoad.inputMethod, 'sliders');
+    delete globalThis.ontouchstart;
+  });
+
+  it('loadSettings preserves stored inputMethod over auto-detection', () => {
+    globalThis.ontouchstart = null;
+    saveSettings({ ...DEFAULT_SETTINGS, inputMethod: 'classic' });
+    const s = loadSettings();
+    assert.equal(s.inputMethod, 'classic');
+    delete globalThis.ontouchstart;
+  });
 });
