@@ -11,6 +11,8 @@ import {
   FIRE_BUTTON_WIDTH, FIRE_BUTTON_HEIGHT,
   MENU_BUTTON_MIN_H,
   SETTINGS_ROW_H, SETTINGS_ROW_GAP, SETTINGS_ARROW_W,
+  SETTINGS_VISIBLE_ROWS, SETTINGS_SCROLL_PADDING,
+  CHARACTER_PREVIEW_SIZE,
   PAUSE_BUTTON_RADIUS, PAUSE_BUTTON_CX, PAUSE_BUTTON_CY,
 } from './constants.js';
 
@@ -590,7 +592,7 @@ export function createRenderer(ctx) {
       });
     },
 
-    drawSettingsMenu(settings, selectedIndex, editingCustom, customValue) {
+    drawSettingsMenu(settings, selectedIndex, editingCustom, customValue, scrollOffset = 0, characterPreview = null, projectileSprite = null) {
       ctx.fillStyle = SKY_NIGHT_COLOR;
       ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
@@ -605,10 +607,11 @@ export function createRenderer(ctx) {
         { label: 'Gravity', value: `${settings.gravityPreset} (${settings.gravityPreset === 'Custom' ? settings.customGravity : (GRAVITY_PRESETS.find(p => p.name === settings.gravityPreset)?.gravity ?? '')})`, cycle: true },
         ...(settings.gravityPreset === 'Custom' ? [{ label: 'Custom G', value: editingCustom ? customValue + '_' : String(settings.customGravity), cycle: false }] : []),
         { label: 'Player 2', value: settings.player2Mode, cycle: true },
+        { label: 'Character', value: settings.character, cycle: true, preview: characterPreview },
+        { label: 'Projectile', value: settings.projectile, cycle: true, preview: projectileSprite, isBanana: settings.projectile === 'Banana' },
         { label: 'Shot Trail', value: settings.shotTrail ? 'ON' : 'OFF', cycle: true },
         { label: 'Aim Preview', value: settings.aimPreview ? 'ON' : 'OFF', cycle: true },
         { label: 'Dynamic Aim', value: settings.dynamicAimPreview ? 'ON' : 'OFF', cycle: true },
-        { label: 'Projectile', value: settings.projectile, cycle: true },
         { label: 'Volume', value: null, volume: settings.volume, cycle: true },
         { label: 'Back', value: null, cycle: false, isBack: true },
       ];
