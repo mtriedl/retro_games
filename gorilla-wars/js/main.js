@@ -24,10 +24,10 @@ import { createRenderer } from './renderer.js';
 import { calculateAIShot } from './ai.js';
 
 const VICTORY_FRAMES = [
-  [0, 1, 3, 2, 0, 1, 3, 0, 3, 0], // Player 1
-  [0, 2, 3, 1, 0, 2, 3, 0, 3, 0], // Player 2
+  [0, 1, 3, 2, 0, 1, 3, 0, 3, 0, 3, 0, 3, 0, 3], // Player 1
+  [0, 2, 3, 1, 0, 2, 3, 0, 3, 0, 3, 0, 3, 0, 3], // Player 2
 ];
-const VICTORY_FRAME_DURATION = 0.3;
+const VICTORY_FRAME_DURATION = 5.0 / 15; // 5 seconds total across 15 frames
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -652,7 +652,7 @@ function handlePlayerInputKey(key) {
 
 function handleSliderInputKey(key) {
   if (key === 'Tab') {
-    const order = ['angle', 'velocity', 'fire'];
+    const order = ['angle', 'velocity'];
     const idx = order.indexOf(game.sliderFocus);
     game.sliderFocus = order[(idx + 1) % order.length];
     return;
@@ -666,9 +666,16 @@ function handleSliderInputKey(key) {
     return;
   }
 
-  const sv = game.sliderValues[game.activePlayer];
+  // Left/Right switches focus between angle and velocity sliders
   if (key === 'ArrowLeft' || key === 'ArrowRight') {
-    const delta = key === 'ArrowRight' ? 1 : -1;
+    game.sliderFocus = game.sliderFocus === 'angle' ? 'velocity' : 'angle';
+    return;
+  }
+
+  // Up/Down adjusts the focused slider value
+  const sv = game.sliderValues[game.activePlayer];
+  if (key === 'ArrowUp' || key === 'ArrowDown') {
+    const delta = key === 'ArrowUp' ? 1 : -1;
     if (game.sliderFocus === 'angle') {
       sv.angle = Math.max(0, Math.min(180, sv.angle + delta));
     } else if (game.sliderFocus === 'velocity') {
@@ -1209,7 +1216,7 @@ function drawGameScene(alpha) {
     // Draw input bar during PLAYER_INPUT
     if (game.state === STATE.PLAYER_INPUT) {
       const sv = game.sliderValues[game.activePlayer];
-      renderer.drawInputBar(game.activePlayer, sv.angle, sv.velocity, isAITurn());
+      renderer.drawInputBar(game.activePlayer, sv.angle, sv.velocity, isAITurn(), game.sliderFocus);
     }
   } else {
     renderer.drawHUD(

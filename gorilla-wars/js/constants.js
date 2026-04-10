@@ -8,7 +8,7 @@ export const CANVAS_HEIGHT = 400;
 export const DT = 1 / 60;
 
 // Physics tuning — converts displayed values to px/s or px/s²
-export const VELOCITY_SCALE = 5.0;
+export const VELOCITY_SCALE = 4.5;
 export const GRAVITY_SCALE = 20.0;
 export const WIND_SCALE = 4.0;
 
@@ -44,7 +44,7 @@ export const WIND_MIN = -15;
 export const WIND_MAX = 15;
 
 // Slider input defaults
-export const VELOCITY_MAX = 250;
+export const VELOCITY_MAX = 200;
 export const DEFAULT_ANGLE = 45;
 export const DEFAULT_VELOCITY = 50;
 

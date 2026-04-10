@@ -61,12 +61,12 @@ describe('constants', () => {
     assert.equal(C.AI_DIFFICULTY.hard.velocityError, 0.05);
   });
 
-  it('VELOCITY_SCALE is 5.0 for rescaled velocity range', () => {
-    assert.equal(C.VELOCITY_SCALE, 5.0);
+  it('VELOCITY_SCALE is 4.5 for rescaled velocity range', () => {
+    assert.equal(C.VELOCITY_SCALE, 4.5);
   });
 
-  it('VELOCITY_MAX is 250', () => {
-    assert.equal(C.VELOCITY_MAX, 250);
+  it('VELOCITY_MAX is 200', () => {
+    assert.equal(C.VELOCITY_MAX, 200);
   });
 
   it('DEFAULT_VELOCITY is 50', () => {

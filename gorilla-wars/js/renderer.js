@@ -321,7 +321,7 @@ export function createRenderer(ctx) {
       ctx.fillText(windStr, CANVAS_WIDTH / 2 + 20, 12);
     },
 
-    drawInputBar(activePlayer, sliderAngle, sliderVelocity, isAI) {
+    drawInputBar(activePlayer, sliderAngle, sliderVelocity, isAI, sliderFocus) {
       const barY = INPUT_BAR_Y;
       const barH = INPUT_BAR_HEIGHT;
       const alpha = isAI ? 0.4 : 0.88;
@@ -338,22 +338,24 @@ export function createRenderer(ctx) {
 
       const centerY = barY + barH / 2;
 
-      // Player label
+      // Player label (shifted right to clear circular pause button at x≈22)
       ctx.font = '12px monospace';
-      ctx.textAlign = 'center';
+      ctx.textAlign = 'left';
       ctx.fillStyle = isAI ? '#888888' : '#FFD700';
       const playerLabel = isAI ? `Player ${activePlayer + 1} (AI)` : `Player ${activePlayer + 1}`;
-      ctx.fillText(playerLabel, 60, centerY + 4);
+      ctx.fillText(playerLabel, 44, centerY + 4);
 
       // Angle slider
       const angleSliderX = 130;
       const angleSliderW = 160;
-      this._drawSlider(angleSliderX, centerY, angleSliderW, sliderAngle, 0, 180, '#FFD700', 'ANGLE', `${sliderAngle}\u00B0`);
+      const angleFocused = !isAI && sliderFocus === 'angle';
+      this._drawSlider(angleSliderX, centerY, angleSliderW, sliderAngle, 0, 180, '#FFD700', 'ANGLE', `${sliderAngle}\u00B0`, angleFocused);
 
       // Velocity slider
       const velSliderX = 340;
       const velSliderW = 160;
-      this._drawSlider(velSliderX, centerY, velSliderW, sliderVelocity, 1, VELOCITY_MAX, '#FF4444', 'VELOCITY', String(sliderVelocity));
+      const velFocused = !isAI && sliderFocus === 'velocity';
+      this._drawSlider(velSliderX, centerY, velSliderW, sliderVelocity, 1, VELOCITY_MAX, '#FF4444', 'VELOCITY', String(sliderVelocity), velFocused);
 
       // FIRE button
       const fireX = CANVAS_WIDTH - 72;
@@ -373,14 +375,23 @@ export function createRenderer(ctx) {
       ctx.fillText('FIRE!', fireX, centerY + 4);
     },
 
-    _drawSlider(x, centerY, width, value, min, max, color, label, displayValue) {
+    _drawSlider(x, centerY, width, value, min, max, color, label, displayValue, focused) {
       const trackY = centerY + 2;
       const trackH = 6;
+
+      // Focus highlight — subtle glow behind the slider area
+      if (focused) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.fillRect(x - 8, centerY - 20, width + 16, 36);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x - 8, centerY - 20, width + 16, 36);
+      }
 
       // Label
       ctx.font = '8px monospace';
       ctx.textAlign = 'center';
-      ctx.fillStyle = '#AAAAAA';
+      ctx.fillStyle = focused ? '#FFFFFF' : '#AAAAAA';
       ctx.fillText(label, x + width / 2, centerY - 14);
 
       // Value display
