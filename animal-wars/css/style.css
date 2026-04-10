@@ -7,7 +7,6 @@ body {
   align-items: center;
   min-height: 100vh;
   overflow: hidden;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 canvas#game {
@@ -18,42 +17,9 @@ canvas#game {
   user-select: none;
 }
 
-/* Rotate prompt — hidden by default, shown in portrait */
-#rotate-prompt {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  background: #000;
-  color: #fff;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  font-family: monospace;
-}
-
-#rotate-prompt .rotate-icon {
-  font-size: 48px;
-  transform: rotate(90deg);
-}
-
-#rotate-prompt h2 {
-  color: #FFD700;
-  font-size: 18px;
-}
-
-#rotate-prompt p {
-  color: #888;
-  font-size: 14px;
-}
-
-@media (orientation: portrait) {
-  #rotate-prompt {
-    display: flex;
-  }
-  canvas#game {
-    display: none;
+@media (orientation: landscape) {
+  body {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
   }
 }
 

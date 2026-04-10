@@ -442,7 +442,6 @@ function handleTitleAction(action) {
       (async () => {
         try {
           await document.documentElement.requestFullscreen();
-          await screen.orientation.lock('landscape').catch(() => {});
         } catch { /* fullscreen unsupported */ }
       })();
       break;
