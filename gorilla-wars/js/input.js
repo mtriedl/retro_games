@@ -1,9 +1,10 @@
 export function createInputHandler() {
-  const state = { field: 'angle', value: '', confirmed: false };
+  const state = { field: 'angle', value: '' };
   const keysDown = new Set();
   let onKeyCallback = null;
 
   function handleKeyDown(e) {
+    if (e.key === 'Tab') e.preventDefault();
     keysDown.add(e.key);
     if (onKeyCallback) onKeyCallback(e.key);
   }
@@ -31,6 +32,10 @@ export function createInputHandler() {
     }
 
     if (key === 'Backspace') {
+      if (state.value === '' && state.field === 'velocity') {
+        state.field = 'angle';
+        return { type: 'back_to_angle' };
+      }
       state.value = state.value.slice(0, -1);
       return { type: 'none' };
     }
@@ -41,14 +46,14 @@ export function createInputHandler() {
       if (isNaN(parsed)) return { type: 'none' };
 
       if (state.field === 'angle') {
-        const angle = Math.max(0, Math.min(90, parsed));
+        const angle = Math.max(0, Math.min(180, parsed));
         state.field = 'velocity';
         state.value = '';
         return { type: 'angle_confirmed', angle };
       }
 
       if (state.field === 'velocity') {
-        const velocity = Math.max(1, Math.min(200, parsed));
+        const velocity = Math.max(1, Math.min(500, parsed));
         state.field = 'done';
         state.value = '';
         return { type: 'fire', velocity };
@@ -61,7 +66,6 @@ export function createInputHandler() {
   function resetInput() {
     state.field = 'angle';
     state.value = '';
-    state.confirmed = false;
   }
 
   function isKeyDown(key) {
