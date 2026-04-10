@@ -15,7 +15,7 @@ describe('calculateAIShot', () => {
   it('returns angle and velocity in valid ranges', () => {
     const shot = calculateAIShot(targetGorilla, aiGorilla, 0, gravitySim, heightmap, 'hard', null);
     assert.ok(shot.angle >= 0 && shot.angle <= 90, `angle ${shot.angle} out of range`);
-    assert.ok(shot.velocity >= 1 && shot.velocity <= 200, `velocity ${shot.velocity} out of range`);
+    assert.ok(shot.velocity >= 1 && shot.velocity <= 100, `velocity ${shot.velocity} out of range`);
   });
 
   it('produces different results for different difficulties', () => {

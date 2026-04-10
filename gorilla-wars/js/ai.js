@@ -147,9 +147,9 @@ export function calculateAIShot(target, aiGorilla, wind, gravity, heightmap, dif
   let bestDistance = Infinity;
 
   // --- Phase 1: Coarse sweep ---
-  // Angle: 5-85 in steps of 5, Velocity: 20-200 in steps of 10
+  // Angle: 5-85 in steps of 5, Velocity: 10-100 in steps of 5
   for (let angle = 5; angle <= 85; angle += 5) {
-    for (let vel = 20; vel <= 200; vel += 10) {
+    for (let vel = 10; vel <= 100; vel += 5) {
       const result = simulateShotWithTracking(aiGorilla, target, angle, vel, wind, gravity, heightmap);
       if (result.distance < bestDistance) {
         bestDistance = result.distance;
@@ -166,11 +166,11 @@ export function calculateAIShot(target, aiGorilla, wind, gravity, heightmap, dif
   if (bestDistance > 0) {
     const fineAngleMin = Math.max(1, bestAngle - 5);
     const fineAngleMax = Math.min(89, bestAngle + 5);
-    const fineVelMin = Math.max(10, bestVelocity - 10);
-    const fineVelMax = Math.min(200, bestVelocity + 10);
+    const fineVelMin = Math.max(5, bestVelocity - 5);
+    const fineVelMax = Math.min(100, bestVelocity + 5);
 
     for (let angle = fineAngleMin; angle <= fineAngleMax; angle += 1) {
-      for (let vel = fineVelMin; vel <= fineVelMax; vel += 2) {
+      for (let vel = fineVelMin; vel <= fineVelMax; vel += 1) {
         const result = simulateShotWithTracking(aiGorilla, target, angle, vel, wind, gravity, heightmap);
         if (result.distance < bestDistance) {
           bestDistance = result.distance;
@@ -200,7 +200,7 @@ export function calculateAIShot(target, aiGorilla, wind, gravity, heightmap, dif
 
   // --- Clamp to valid ranges ---
   bestAngle = Math.max(0, Math.min(90, Math.round(bestAngle * 10) / 10));
-  bestVelocity = Math.max(1, Math.min(200, Math.round(bestVelocity * 10) / 10));
+  bestVelocity = Math.max(1, Math.min(100, Math.round(bestVelocity * 10) / 10));
 
   return { angle: bestAngle, velocity: bestVelocity };
 }
