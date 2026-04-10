@@ -115,8 +115,11 @@ async function init() {
   // Key handler
   input.onKey = (key) => handleKey(key);
 
-  // Mouse handler for menus
+  // Mouse handlers for menus and slider dragging
   canvas.addEventListener('click', handleClick);
+  canvas.addEventListener('mousedown', handleMouseDown);
+  canvas.addEventListener('mousemove', handleMouseMove);
+  canvas.addEventListener('mouseup', handleMouseUp);
 
   // Touch handlers for slider and menu interaction
   canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -656,7 +659,11 @@ function handleSliderInputKey(key) {
   }
 
   if (key === 'Enter') {
-    if (game.sliderFocus === 'fire') {
+    if (game.sliderFocus === 'angle') {
+      game.sliderFocus = 'velocity';
+    } else if (game.sliderFocus === 'velocity') {
+      game.sliderFocus = 'fire';
+    } else if (game.sliderFocus === 'fire') {
       const sv = game.sliderValues[game.activePlayer];
       game.lastInputs[game.activePlayer].angle = sv.angle;
       game.lastInputs[game.activePlayer].velocity = sv.velocity;
@@ -799,6 +806,37 @@ function handleClick(e) {
       }
     }
   }
+}
+
+function handleMouseDown(e) {
+  const { x, y } = canvasCoords(e);
+  game.touchStartPos = { x, y };
+
+  if (game.state === STATE.PLAYER_INPUT && settings.inputMethod === 'sliders' && !isAITurn()) {
+    const geo = renderer.getSliderGeometry();
+    if (hitTestSlider(x, y, geo.angle)) {
+      game.activeSliderDrag = 'angle';
+      updateSliderFromX(x, geo.angle, 'angle');
+    } else if (hitTestSlider(x, y, geo.velocity)) {
+      game.activeSliderDrag = 'velocity';
+      updateSliderFromX(x, geo.velocity, 'velocity');
+    }
+  }
+}
+
+function handleMouseMove(e) {
+  if (!game.activeSliderDrag) return;
+  const { x } = canvasCoords(e);
+  const geo = renderer.getSliderGeometry();
+  updateSliderFromX(x, geo[game.activeSliderDrag], game.activeSliderDrag);
+}
+
+function handleMouseUp(e) {
+  if (game.activeSliderDrag) {
+    game.activeSliderDrag = null;
+    return;
+  }
+  // Non-drag clicks are handled by the 'click' listener (handleClick)
 }
 
 function canvasCoords(touch) {

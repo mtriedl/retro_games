@@ -298,9 +298,9 @@ export function createRenderer(ctx) {
 
       ctx.textAlign = 'right';
       ctx.fillStyle = '#FFD700';
-      ctx.fillText('Player 2', CANVAS_WIDTH - 8, 14);
+      ctx.fillText('Player 2', CANVAS_WIDTH - 36, 14);
       ctx.fillStyle = '#FFFFFF';
-      ctx.fillText(`Score: ${scores[1]}`, CANVAS_WIDTH - 8, 26);
+      ctx.fillText(`Score: ${scores[1]}`, CANVAS_WIDTH - 36, 26);
 
       // Round and wind on single center line, split apart
       ctx.font = '10px monospace';
