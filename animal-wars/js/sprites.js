@@ -41,7 +41,6 @@ export async function loadCharacterPreview(characterName = 'Gorilla') {
 }
 
 export async function loadProjectileSprite(name) {
-  if (name === 'Banana') return null;
   const src = `assets/images/projectile-${name.toLowerCase()}.png`;
   const img = new Image();
   return new Promise((resolve, reject) => {

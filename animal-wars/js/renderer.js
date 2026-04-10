@@ -608,7 +608,7 @@ export function createRenderer(ctx) {
         ...(settings.gravityPreset === 'Custom' ? [{ label: 'Custom G', value: editingCustom ? customValue + '_' : String(settings.customGravity), cycle: false }] : []),
         { label: 'Player 2', value: settings.player2Mode, cycle: true },
         { label: 'Character', value: settings.character, cycle: true, preview: characterPreview, hasPreview: true },
-        { label: 'Projectile', value: settings.projectile, cycle: true, preview: projectileSprite, isBanana: settings.projectile === 'Banana' },
+        { label: 'Projectile', value: settings.projectile, cycle: true, preview: projectileSprite, hasPreview: true },
         { label: 'Shot Trail', value: settings.shotTrail ? 'ON' : 'OFF', cycle: true },
         { label: 'Aim Preview', value: settings.aimPreview ? 'ON' : 'OFF', cycle: true },
         { label: 'Dynamic Aim', value: settings.dynamicAimPreview ? 'ON' : 'OFF', cycle: true },
@@ -730,7 +730,7 @@ export function createRenderer(ctx) {
         }
 
         // Sprite preview (Character / Projectile rows)
-        if (item.preview || item.isBanana || item.hasPreview) {
+        if (item.preview || item.hasPreview) {
           const previewSize = CHARACTER_PREVIEW_SIZE;
           const previewX = rightArrowX + arrowW + 8;
           const previewY = y + (rowH - previewSize) / 2;
@@ -743,22 +743,7 @@ export function createRenderer(ctx) {
             ctx.imageSmoothingEnabled = false;
             ctx.drawImage(item.preview, previewX, previewY, previewSize, previewSize);
             ctx.imageSmoothingEnabled = true;
-          } else if (item.isBanana) {
-            // Procedural mini banana
-            ctx.save();
-            ctx.translate(previewX + previewSize / 2, previewY + previewSize / 2);
-            const scale = previewSize / (BANANA_RADIUS * 3);
-            ctx.scale(scale, scale);
-            ctx.fillStyle = BANANA_COLOR;
-            ctx.beginPath();
-            ctx.arc(0, 0, BANANA_RADIUS, 0.3, Math.PI - 0.3);
-            ctx.arc(0, -2, BANANA_RADIUS - 3, Math.PI - 0.3, 0.3, true);
-            ctx.fill();
-            ctx.fillStyle = BANANA_TIP_COLOR;
-            ctx.fillRect(-BANANA_RADIUS, -2, 4, 4);
-            ctx.fillRect(BANANA_RADIUS - 4, -2, 4, 4);
-            ctx.restore();
-          } else if (item.hasPreview) {
+          } else {
             // Missing sprite placeholder
             ctx.fillStyle = '#555555';
             ctx.font = '16px monospace';
