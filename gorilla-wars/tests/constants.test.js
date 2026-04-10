@@ -17,7 +17,7 @@ describe('constants', () => {
   });
 
   it('exports building parameters within spec ranges', () => {
-    assert.ok(C.BUILDING_MIN_WIDTH >= 52);
+    assert.ok(C.BUILDING_MIN_WIDTH >= 50);
     assert.ok(C.BUILDING_MAX_WIDTH <= 62);
     assert.ok(C.BUILDING_MIN_HEIGHT >= 120);
     assert.ok(C.BUILDING_MAX_HEIGHT <= 230);
@@ -59,5 +59,37 @@ describe('constants', () => {
     assert.equal(C.AI_DIFFICULTY.easy.velocityError, 0.20);
     assert.equal(C.AI_DIFFICULTY.hard.angleError, 3);
     assert.equal(C.AI_DIFFICULTY.hard.velocityError, 0.05);
+  });
+
+  it('VELOCITY_SCALE is 5.0 for rescaled velocity range', () => {
+    assert.equal(C.VELOCITY_SCALE, 5.0);
+  });
+
+  it('VELOCITY_MAX is 500', () => {
+    assert.equal(C.VELOCITY_MAX, 500);
+  });
+
+  it('DEFAULT_VELOCITY is 50', () => {
+    assert.equal(C.DEFAULT_VELOCITY, 50);
+  });
+
+  it('DEFAULT_ANGLE is 45', () => {
+    assert.equal(C.DEFAULT_ANGLE, 45);
+  });
+
+  it('FIRE_BUTTON_WIDTH meets 88px spec minimum', () => {
+    assert.equal(C.FIRE_BUTTON_WIDTH, 88);
+  });
+
+  it('FIRE_BUTTON_HEIGHT meets 44px spec minimum', () => {
+    assert.equal(C.FIRE_BUTTON_HEIGHT, 44);
+  });
+
+  it('MENU_BUTTON_MIN_H meets 44px spec minimum', () => {
+    assert.equal(C.MENU_BUTTON_MIN_H, 44);
+  });
+
+  it('SETTINGS_ARROW_HIT is 44px for touch target', () => {
+    assert.equal(C.SETTINGS_ARROW_HIT, 44);
   });
 });

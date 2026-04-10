@@ -8,17 +8,18 @@ export const CANVAS_HEIGHT = 400;
 export const DT = 1 / 60;
 
 // Physics tuning — converts displayed values to px/s or px/s²
-export const VELOCITY_SCALE = 2.5;
-export const GRAVITY_SCALE = 50.0;
+export const VELOCITY_SCALE = 5.0;
+export const GRAVITY_SCALE = 20.0;
 export const WIND_SCALE = 4.0;
 
 // Buildings
 export const BUILDING_COUNT_MIN = 11;
 export const BUILDING_COUNT_MAX = 12;
-export const BUILDING_MIN_WIDTH = 52;
+export const BUILDING_MIN_WIDTH = 50;
 export const BUILDING_MAX_WIDTH = 62;
 export const BUILDING_MIN_HEIGHT = 120;
 export const BUILDING_MAX_HEIGHT = 230;
+export const BUILDING_GAP = 2;
 
 // Windows
 export const WINDOW_WIDTH = 8;
@@ -41,6 +42,37 @@ export const EXPLOSION_GORILLA_RADIUS = 55;
 // Wind
 export const WIND_MIN = -15;
 export const WIND_MAX = 15;
+
+// Slider input defaults
+export const VELOCITY_MAX = 500;
+export const DEFAULT_ANGLE = 45;
+export const DEFAULT_VELOCITY = 50;
+
+// Bottom bar dimensions (canvas logical coordinates)
+export const INPUT_BAR_HEIGHT = 48;
+export const INPUT_BAR_Y = CANVAS_HEIGHT - INPUT_BAR_HEIGHT;
+
+// Touch target sizes (canvas logical coordinates)
+// Apple HIG minimum: 44pt touch targets
+export const SLIDER_THUMB_RADIUS = 10;
+export const SLIDER_THUMB_HIT_RADIUS = 22;
+export const FIRE_BUTTON_WIDTH = 88;
+export const FIRE_BUTTON_HEIGHT = 44;
+export const MENU_BUTTON_MIN_H = 44;
+
+// Settings arrow buttons — visual 28px constrained by row height,
+// but touch hit area expanded to 44x44 (centered on arrow)
+export const SETTINGS_ROW_H = 28;
+export const SETTINGS_ROW_GAP = 4;
+export const SETTINGS_ARROW_W = 28;
+export const SETTINGS_ARROW_HIT = 44;
+
+// Pause button (top-right corner)
+export const PAUSE_BUTTON_X = CANVAS_WIDTH - 28;
+export const PAUSE_BUTTON_Y = 4;
+export const PAUSE_BUTTON_W = 24;
+export const PAUSE_BUTTON_H = 16;
+export const PAUSE_BUTTON_HIT_SIZE = 44;
 
 // Colors
 export const SKY_DAY_COLOR = '#0000AA';
