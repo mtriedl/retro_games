@@ -5,6 +5,13 @@ import {
   WINDOW_LIT_COLOR, WINDOW_UNLIT_COLOR,
   BANANA_COLOR, BANANA_TIP_COLOR, BANANA_RADIUS,
   GORILLA_FRAME_SIZE, GORILLA_COLLISION_WIDTH, GORILLA_COLLISION_HEIGHT,
+  GRAVITY_PRESETS, VELOCITY_SCALE, GRAVITY_SCALE,
+  INPUT_BAR_HEIGHT, INPUT_BAR_Y, VELOCITY_MAX,
+  SLIDER_THUMB_RADIUS,
+  FIRE_BUTTON_WIDTH, FIRE_BUTTON_HEIGHT,
+  MENU_BUTTON_MIN_H,
+  SETTINGS_ROW_H, SETTINGS_ROW_GAP, SETTINGS_ARROW_W,
+  PAUSE_BUTTON_X, PAUSE_BUTTON_Y, PAUSE_BUTTON_W, PAUSE_BUTTON_H,
 } from './constants.js';
 
 /**
@@ -108,10 +115,9 @@ export function createRenderer(ctx) {
             ctx.fillRect(x, top, 1, CANVAS_HEIGHT - top);
           }
         }
-        // Draw windows that are still visible (above heightmap)
+        // Draw windows that are still visible (inside solid building, below heightmap)
         for (const w of b.windows) {
-          if (w.y + 10 > heightmap[w.x] && w.y >= heightmap[w.x]) continue; // cratered away
-          if (w.y < heightmap[w.x]) {
+          if (w.y >= heightmap[w.x]) {
             ctx.fillStyle = w.lit ? WINDOW_LIT_COLOR : WINDOW_UNLIT_COLOR;
             ctx.fillRect(w.x, w.y, 8, 10);
           }
@@ -126,7 +132,9 @@ export function createRenderer(ctx) {
       // Anchor: bottom-center of 32x32 frame
       const drawX = gorilla.x - GORILLA_FRAME_SIZE / 2;
       const drawY = gorilla.y - GORILLA_FRAME_SIZE;
+      ctx.imageSmoothingEnabled = false;
       ctx.drawImage(sprite, drawX, drawY, GORILLA_FRAME_SIZE, GORILLA_FRAME_SIZE);
+      ctx.imageSmoothingEnabled = true;
     },
 
     drawBanana(banana, alpha) {
@@ -186,15 +194,18 @@ export function createRenderer(ctx) {
       ctx.font = '10px monospace';
       ctx.textAlign = 'center';
 
-      let arrow = '';
-      for (let i = 0; i < arrowCount; i++) {
-        arrow += dir > 0 ? '>' : '<';
+      let arrow = 'wind: ';
+      if (wind === 0) {
+        arrow += '-';
+      } else {
+        for (let i = 0; i < arrowCount; i++) {
+          arrow += dir > 0 ? '>' : '<';
+        }
       }
-      if (wind === 0) arrow = '-';
       ctx.fillText(arrow, cx, y + 4);
     },
 
-    drawHUD(activePlayer, inputField, inputValue, lastInputs, scores, blinkOn) {
+    drawHUD(activePlayer, inputField, inputValue, lastInputs, scores, blinkOn, round, totalRounds) {
       ctx.font = '10px monospace';
 
       // Player labels
@@ -208,33 +219,71 @@ export function createRenderer(ctx) {
 
         // Angle
         const angleLabel = 'Angle: ';
-        let angleVal = '';
+        let angleHandled = false;
         if (isActive && inputField === 'angle') {
-          angleVal = inputValue + (blinkOn ? '_' : ' ');
+          if (inputValue === '' && lastInputs[p].angle !== null) {
+            // Cursor at beginning, greyed placeholder after
+            const cursorChar = blinkOn ? '_' : ' ';
+            ctx.fillText(angleLabel + cursorChar, x, 28);
+            const offset = ctx.measureText(angleLabel + cursorChar).width;
+            ctx.fillStyle = '#555555';
+            ctx.fillText(String(Math.round(lastInputs[p].angle)), x + offset, 28);
+            angleHandled = true;
+          } else {
+            ctx.fillText(angleLabel + inputValue + (blinkOn ? '_' : ' '), x, 28);
+            angleHandled = true;
+          }
         } else if (lastInputs[p].angle !== null) {
-          angleVal = String(lastInputs[p].angle);
           if (!isActive) ctx.fillStyle = '#555555';
+          ctx.fillText(angleLabel + String(Math.round(lastInputs[p].angle)), x, 28);
+          angleHandled = true;
         }
-        ctx.fillText(angleLabel + angleVal, x, 28);
+        if (!angleHandled) ctx.fillText(angleLabel, x, 28);
 
         // Velocity
         ctx.fillStyle = isActive ? '#FFFFFF' : '#888888';
         const velLabel = 'Vel:   ';
-        let velVal = '';
+        let velHandled = false;
         if (isActive && inputField === 'velocity') {
-          velVal = inputValue + (blinkOn ? '_' : ' ');
+          if (inputValue === '' && lastInputs[p].velocity !== null) {
+            const cursorChar = blinkOn ? '_' : ' ';
+            ctx.fillText(velLabel + cursorChar, x, 42);
+            const offset = ctx.measureText(velLabel + cursorChar).width;
+            ctx.fillStyle = '#555555';
+            ctx.fillText(String(Math.round(lastInputs[p].velocity)), x + offset, 42);
+            velHandled = true;
+          } else {
+            ctx.fillText(velLabel + inputValue + (blinkOn ? '_' : ' '), x, 42);
+            velHandled = true;
+          }
         } else if (lastInputs[p].velocity !== null) {
-          velVal = String(lastInputs[p].velocity);
-          if (!isActive) ctx.fillStyle = '#555555';
+          ctx.fillStyle = '#555555';
+          ctx.fillText(velLabel + String(Math.round(lastInputs[p].velocity)), x, 42);
+          velHandled = true;
         }
-        ctx.fillText(velLabel + velVal, x, 42);
+        if (!velHandled) ctx.fillText(velLabel, x, 42);
       }
 
-      // Score
-      ctx.fillStyle = '#FFFFFF';
+      // Round and Score with background box
       ctx.font = '12px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(`${scores[0]}>${scores[0] + scores[1]}<${scores[1]}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT - 8);
+      const roundText = `Round: ${(round || 0) + 1}/${totalRounds || 1}`;
+      const scoreText = `${scores[0]} :score: ${scores[1]}`;
+      const scoreY = CANVAS_HEIGHT - 10;
+      const roundY = scoreY - 14;
+      const pad = 7;
+      const maxTextW = Math.max(ctx.measureText(roundText).width, ctx.measureText(scoreText).width);
+      const boxW = maxTextW + pad * 2;
+      const boxX = CANVAS_WIDTH / 2 - boxW / 2;
+      const boxYStart = roundY - 10 - pad;
+      const boxH = (scoreY + 3 + pad) - boxYStart;
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.fillRect(boxX, boxYStart, boxW, boxH);
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(roundText, CANVAS_WIDTH / 2, roundY);
+      ctx.fillText(scoreText, CANVAS_WIDTH / 2, scoreY);
     },
 
     drawBananaTracker(bananaX) {
@@ -247,9 +296,9 @@ export function createRenderer(ctx) {
 
     drawShotTrail(trail, alpha) {
       if (trail.length < 2) return;
-      ctx.fillStyle = `rgba(255, 255, 255, ${0.2 * alpha})`;
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.7 * alpha})`;
       for (let i = 0; i < trail.length; i += 3) {
-        ctx.fillRect(trail[i].x, trail[i].y, 1, 1);
+        ctx.fillRect(trail[i].x - 1, trail[i].y - 1, 2, 2);
       }
     },
 
@@ -257,18 +306,48 @@ export function createRenderer(ctx) {
       if (localAngle === null) return;
       const worldAngleDeg = playerIndex === 0 ? localAngle : 180 - localAngle;
       const rad = worldAngleDeg * Math.PI / 180;
-      const len = 40;
-      const ex = gorilla.x + Math.cos(rad) * len;
-      const ey = gorilla.y - GORILLA_FRAME_SIZE / 2 - Math.sin(rad) * len;
+      const cx = gorilla.x;
+      const cy = gorilla.y - GORILLA_FRAME_SIZE / 2;
+      const startOffset = GORILLA_FRAME_SIZE / 2 + 4;
+      const len = 50;
+      const sx = cx + Math.cos(rad) * startOffset;
+      const sy = cy - Math.sin(rad) * startOffset;
+      const ex = cx + Math.cos(rad) * len;
+      const ey = cy - Math.sin(rad) * len;
 
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
       ctx.lineWidth = 1;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
-      ctx.moveTo(gorilla.x, gorilla.y - GORILLA_FRAME_SIZE / 2);
+      ctx.moveTo(sx, sy);
       ctx.lineTo(ex, ey);
       ctx.stroke();
       ctx.setLineDash([]);
+    },
+
+    drawDynamicAimPreview(gorilla, localAngle, velocity, playerIndex, gravityValue) {
+      if (localAngle === null || velocity === null) return;
+      const worldAngleDeg = playerIndex === 0 ? localAngle : 180 - localAngle;
+      const rad = worldAngleDeg * Math.PI / 180;
+      const speed = velocity * VELOCITY_SCALE;
+      let vx = speed * Math.cos(rad);
+      let vy = -speed * Math.sin(rad);
+      let px = gorilla.x;
+      let py = gorilla.y - GORILLA_FRAME_SIZE / 2;
+      const g = gravityValue * GRAVITY_SCALE;
+      const dt = 1 / 60;
+      const steps = 300;
+
+      ctx.fillStyle = 'rgba(255, 255, 100, 0.4)';
+      for (let i = 0; i < steps; i++) {
+        px += vx * dt;
+        py += vy * dt;
+        vy += g * dt;
+        if (px < 0 || px >= CANVAS_WIDTH || py >= CANVAS_HEIGHT) break;
+        if (i % 3 === 0) {
+          ctx.fillRect(px - 1, py - 1, 2, 2);
+        }
+      }
     },
 
     drawTitleScreen(selectedIndex) {
@@ -283,28 +362,51 @@ export function createRenderer(ctx) {
       const items = ['New Game', 'Settings', 'Fullscreen'];
       ctx.font = '14px monospace';
       items.forEach((item, i) => {
-        ctx.fillStyle = i === selectedIndex ? '#FFFFFF' : '#888888';
-        const prefix = i === selectedIndex ? '> ' : '  ';
-        ctx.fillText(prefix + item, CANVAS_WIDTH / 2, 200 + i * 30);
+        const y = 200 + i * 54;
+        const w = 180;
+        const h = MENU_BUTTON_MIN_H;
+        const x = CANVAS_WIDTH / 2 - w / 2;
+        const selected = i === selectedIndex;
+
+        ctx.fillStyle = selected ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.05)';
+        ctx.fillRect(x, y - h / 2, w, h);
+
+        ctx.strokeStyle = selected ? '#FFD700' : '#555555';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y - h / 2, w, h);
+
+        ctx.fillStyle = selected ? '#FFFFFF' : '#888888';
+        ctx.fillText(item, CANVAS_WIDTH / 2, y + 5);
       });
     },
 
     drawPauseMenu(selectedIndex) {
-      // Dim overlay
       ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
       ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
       ctx.fillStyle = '#FFFFFF';
       ctx.font = '20px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText('PAUSED', CANVAS_WIDTH / 2, 130);
+      ctx.fillText('PAUSED', CANVAS_WIDTH / 2, 120);
 
       const items = ['Resume', 'Restart Round', 'Settings', 'Quit to Title'];
       ctx.font = '14px monospace';
       items.forEach((item, i) => {
-        ctx.fillStyle = i === selectedIndex ? '#FFFFFF' : '#888888';
-        const prefix = i === selectedIndex ? '> ' : '  ';
-        ctx.fillText(prefix + item, CANVAS_WIDTH / 2, 180 + i * 28);
+        const y = 170 + i * 52;
+        const w = 200;
+        const h = MENU_BUTTON_MIN_H;
+        const x = CANVAS_WIDTH / 2 - w / 2;
+        const selected = i === selectedIndex;
+
+        ctx.fillStyle = selected ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.05)';
+        ctx.fillRect(x, y - h / 2, w, h);
+
+        ctx.strokeStyle = selected ? '#FFD700' : '#555555';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y - h / 2, w, h);
+
+        ctx.fillStyle = selected ? '#FFFFFF' : '#888888';
+        ctx.fillText(item, CANVAS_WIDTH / 2, y + 5);
       });
     },
 
@@ -315,24 +417,97 @@ export function createRenderer(ctx) {
       ctx.fillStyle = '#FFFFFF';
       ctx.font = '20px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText('SETTINGS', CANVAS_WIDTH / 2, 60);
+      ctx.fillText('SETTINGS', CANVAS_WIDTH / 2, 40);
 
       const items = [
-        `Rounds: < ${settings.rounds} >`,
-        `Gravity: < ${settings.gravityPreset} (${settings.gravityPreset === 'Custom' ? settings.customGravity : ''}) >`,
-        settings.gravityPreset === 'Custom' ? `Custom Gravity: ${editingCustom ? customValue + '_' : settings.customGravity}` : null,
-        `Player 2: < ${settings.player2Mode} >`,
-        `Shot Trail: < ${settings.shotTrail ? 'ON' : 'OFF'} >`,
-        `Aim Preview: < ${settings.aimPreview ? 'ON' : 'OFF'} >`,
-        `Volume: ${'='.repeat(Math.round(settings.volume * 10))}${'·'.repeat(10 - Math.round(settings.volume * 10))} ${Math.round(settings.volume * 100)}%`,
-        'Back',
-      ].filter(Boolean);
+        { label: 'Input', value: settings.inputMethod === 'sliders' ? 'Sliders' : 'Classic', cycle: true },
+        { label: 'Rounds', value: String(settings.rounds), cycle: true },
+        { label: 'Gravity', value: `${settings.gravityPreset} (${settings.gravityPreset === 'Custom' ? settings.customGravity : (GRAVITY_PRESETS.find(p => p.name === settings.gravityPreset)?.gravity ?? '')})`, cycle: true },
+        ...(settings.gravityPreset === 'Custom' ? [{ label: 'Custom G', value: editingCustom ? customValue + '_' : String(settings.customGravity), cycle: false }] : []),
+        { label: 'Player 2', value: settings.player2Mode, cycle: true },
+        { label: 'Shot Trail', value: settings.shotTrail ? 'ON' : 'OFF', cycle: true },
+        { label: 'Aim Preview', value: settings.aimPreview ? 'ON' : 'OFF', cycle: true },
+        { label: 'Dynamic Aim', value: settings.dynamicAimPreview ? 'ON' : 'OFF', cycle: true },
+        { label: 'Volume', value: null, volume: settings.volume, cycle: true },
+        { label: 'Back', value: null, cycle: false, isBack: true },
+      ];
 
-      ctx.font = '12px monospace';
+      const rowH = SETTINGS_ROW_H;
+      const rowGap = SETTINGS_ROW_GAP;
+      const startY = 68;
+      const rowW = 340;
+      const rowX = CANVAS_WIDTH / 2 - rowW / 2;
+      const arrowW = SETTINGS_ARROW_W;
+
+      ctx.font = '11px monospace';
       items.forEach((item, i) => {
-        ctx.fillStyle = i === selectedIndex ? '#FFFFFF' : '#888888';
-        const prefix = i === selectedIndex ? '> ' : '  ';
-        ctx.fillText(prefix + item, CANVAS_WIDTH / 2, 110 + i * 24);
+        const y = startY + i * (rowH + rowGap);
+        const selected = i === selectedIndex;
+
+        if (item.isBack) {
+          const bw = 120;
+          const bx = CANVAS_WIDTH / 2 - bw / 2;
+          ctx.fillStyle = selected ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.05)';
+          ctx.fillRect(bx, y, bw, rowH);
+          ctx.strokeStyle = selected ? '#FFD700' : '#555555';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(bx, y, bw, rowH);
+          ctx.fillStyle = selected ? '#FFFFFF' : '#888888';
+          ctx.textAlign = 'center';
+          ctx.fillText('Back', CANVAS_WIDTH / 2, y + rowH - 6);
+          return;
+        }
+
+        // Row background
+        ctx.fillStyle = selected ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)';
+        ctx.fillRect(rowX, y, rowW, rowH);
+
+        // Label
+        ctx.fillStyle = selected ? '#FFD700' : '#888888';
+        ctx.textAlign = 'left';
+        ctx.fillText(item.label, rowX + 8, y + rowH - 6);
+
+        // Value area
+        ctx.textAlign = 'center';
+        const valueX = rowX + rowW - 100;
+
+        if (item.volume !== undefined && item.volume !== null) {
+          // Volume bar
+          const barX = valueX - 50;
+          const barW = 80;
+          const barH = 6;
+          const barY = y + (rowH - barH) / 2;
+          ctx.fillStyle = '#333333';
+          ctx.fillRect(barX, barY, barW, barH);
+          ctx.fillStyle = '#55FF55';
+          ctx.fillRect(barX, barY, barW * item.volume, barH);
+          ctx.fillStyle = '#AAAAAA';
+          ctx.textAlign = 'right';
+          ctx.fillText(`${Math.round(item.volume * 100)}%`, rowX + rowW - 8, y + rowH - 6);
+        } else if (item.value !== null) {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillText(item.value, valueX, y + rowH - 6);
+        }
+
+        // Arrow buttons for cycling items
+        if (item.cycle) {
+          const leftArrowX = valueX - 70;
+          const rightArrowX = rowX + rowW - arrowW - 4;
+          const arrowY = y + 2;
+          const arrowH = rowH - 4;
+
+          ctx.fillStyle = '#444444';
+          ctx.fillRect(leftArrowX, arrowY, arrowW, arrowH);
+          ctx.fillStyle = '#FFD700';
+          ctx.textAlign = 'center';
+          ctx.fillText('<', leftArrowX + arrowW / 2, arrowY + arrowH - 4);
+
+          ctx.fillStyle = '#444444';
+          ctx.fillRect(rightArrowX, arrowY, arrowW, arrowH);
+          ctx.fillStyle = '#FFD700';
+          ctx.textAlign = 'center';
+          ctx.fillText('>', rightArrowX + arrowW / 2, arrowY + arrowH - 4);
+        }
       });
     },
 
@@ -366,7 +541,7 @@ export function createRenderer(ctx) {
 
       ctx.fillStyle = '#FFFFFF';
       ctx.font = '12px monospace';
-      ctx.fillText('Press Enter to continue', CANVAS_WIDTH / 2, 240);
+      ctx.fillText('Tap or press Enter to continue', CANVAS_WIDTH / 2, 240);
     },
 
     drawBuildingRise(buildings, progress) {
