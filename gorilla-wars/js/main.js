@@ -840,9 +840,11 @@ function handleMouseDown(e) {
     const geo = renderer.getSliderGeometry();
     if (hitTestSlider(x, y, geo.angle)) {
       game.activeSliderDrag = 'angle';
+      game.sliderFocus = 'angle';
       updateSliderFromX(x, geo.angle, 'angle');
     } else if (hitTestSlider(x, y, geo.velocity)) {
       game.activeSliderDrag = 'velocity';
+      game.sliderFocus = 'velocity';
       updateSliderFromX(x, geo.velocity, 'velocity');
     }
   }
@@ -885,12 +887,14 @@ function handleTouchStart(e) {
 
     if (hitTestSlider(x, y, geo.angle)) {
       game.activeSliderDrag = 'angle';
+      game.sliderFocus = 'angle';
       updateSliderFromX(x, geo.angle, 'angle');
       return;
     }
 
     if (hitTestSlider(x, y, geo.velocity)) {
       game.activeSliderDrag = 'velocity';
+      game.sliderFocus = 'velocity';
       updateSliderFromX(x, geo.velocity, 'velocity');
       return;
     }
