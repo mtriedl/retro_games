@@ -2,12 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Gorilla Wars</title>
+
+  <!-- iOS standalone web app (Add to Home Screen launches fullscreen) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Gorilla Wars">
+
+  <!-- Web app manifest (Android "Add to Home Screen" + PWA metadata) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#000000">
+
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <canvas id="game" width="640" height="400"></canvas>
+  <div id="rotate-prompt">
+    <div class="rotate-icon">&#x1F4F1;</div>
+    <h2>Rotate Your Device</h2>
+    <p>Gorilla Wars plays in landscape mode</p>
+  </div>
+  <input id="custom-gravity-input" type="number" inputmode="decimal" aria-hidden="true">
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

@@ -10,8 +10,55 @@ body {
 }
 
 canvas#game {
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
   width: min(100vw, calc(100vh * 640 / 400));
   height: min(100vh, calc(100vw * 400 / 640));
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Rotate prompt — hidden by default, shown in portrait */
+#rotate-prompt {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #000;
+  color: #fff;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  font-family: monospace;
+}
+
+#rotate-prompt .rotate-icon {
+  font-size: 48px;
+  transform: rotate(90deg);
+}
+
+#rotate-prompt h2 {
+  color: #FFD700;
+  font-size: 18px;
+}
+
+#rotate-prompt p {
+  color: #888;
+  font-size: 14px;
+}
+
+@media (orientation: portrait) {
+  #rotate-prompt {
+    display: flex;
+  }
+  canvas#game {
+    display: none;
+  }
+}
+
+/* Hidden input for custom gravity on touch */
+#custom-gravity-input {
+  position: absolute;
+  left: -9999px;
+  opacity: 0;
 }
