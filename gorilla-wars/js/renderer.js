@@ -379,24 +379,15 @@ export function createRenderer(ctx) {
       const trackY = centerY + 2;
       const trackH = 6;
 
-      // Focus highlight — subtle glow behind the slider area
-      if (focused) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-        ctx.fillRect(x - 8, centerY - 20, width + 16, 36);
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x - 8, centerY - 20, width + 16, 36);
-      }
-
-      // Label
+      // Label — colored when focused, muted when not
       ctx.font = '8px monospace';
       ctx.textAlign = 'center';
-      ctx.fillStyle = focused ? '#FFFFFF' : '#AAAAAA';
+      ctx.fillStyle = focused ? color : '#666666';
       ctx.fillText(label, x + width / 2, centerY - 14);
 
       // Value display
       ctx.font = '11px monospace';
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = focused ? '#FFFFFF' : '#AAAAAA';
       ctx.textAlign = 'right';
       ctx.fillText(displayValue, x - 4, centerY + 6);
 
@@ -404,18 +395,25 @@ export function createRenderer(ctx) {
       ctx.fillStyle = '#333333';
       ctx.fillRect(x, trackY - trackH / 2, width, trackH);
 
-      // Track fill
+      // Track fill — full color when focused, dimmed when not
       const pct = (value - min) / (max - min);
-      ctx.fillStyle = color;
+      ctx.fillStyle = focused ? color : '#555555';
       ctx.fillRect(x, trackY - trackH / 2, width * pct, trackH);
 
-      // Thumb
+      // Thumb — filled with color when focused, hollow when not
       const thumbX = x + width * pct;
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(thumbX, trackY, SLIDER_THUMB_RADIUS, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = color;
+      if (focused) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(thumbX, trackY, SLIDER_THUMB_RADIUS, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#444444';
+        ctx.beginPath();
+        ctx.arc(thumbX, trackY, SLIDER_THUMB_RADIUS, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.strokeStyle = focused ? '#FFFFFF' : '#666666';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(thumbX, trackY, SLIDER_THUMB_RADIUS, 0, Math.PI * 2);
