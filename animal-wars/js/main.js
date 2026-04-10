@@ -6,19 +6,20 @@ import {
   EXPLOSION_BUILDING_RADIUS, EXPLOSION_GORILLA_RADIUS,
   GORILLA_FRAME_SIZE, BANANA_RADIUS,
   GORILLA_COLLISION_WIDTH, GORILLA_COLLISION_HEIGHT,
-  GRAVITY_PRESETS, PROJECTILE_OPTIONS,
+  GRAVITY_PRESETS, PROJECTILE_OPTIONS, CHARACTER_OPTIONS,
   DEFAULT_ANGLE, DEFAULT_VELOCITY, VELOCITY_MAX,
   INPUT_BAR_Y, INPUT_BAR_HEIGHT,
   SLIDER_THUMB_HIT_RADIUS,
   MENU_BUTTON_MIN_H,
   SETTINGS_ROW_H, SETTINGS_ROW_GAP, SETTINGS_ARROW_W, SETTINGS_ARROW_HIT,
+  SETTINGS_VISIBLE_ROWS, SETTINGS_SCROLL_PADDING,
   PAUSE_BUTTON_CX, PAUSE_BUTTON_CY, PAUSE_BUTTON_HIT_RADIUS,
 } from './constants.js';
 import { loadSettings, saveSettings, getGravityValue } from './settings.js';
 import { generateCity, initHeightmap, carveExplosion } from './buildings.js';
 import { createProjectile, stepSimulation, checkCollisions } from './physics.js';
 import { createInputHandler } from './input.js';
-import { createGorillaSprites, loadProjectileSprite } from './sprites.js';
+import { createCharacterSprites, loadCharacterPreview, loadProjectileSprite } from './sprites.js';
 import { createAudioEngine } from './audio.js';
 import { createRenderer } from './renderer.js';
 import { calculateAIShot } from './ai.js';
@@ -79,6 +80,8 @@ const game = {
   menuIndex: 0,
   settingsIndex: 0,
   settingsFrom: null,
+  settingsScrollOffset: 0,
+  characterPreviewSprite: null,
   customGravityInput: '',
   buildingAnimProgress: 0,
   roundEndTimer: 0,
@@ -101,7 +104,7 @@ const game = {
 
 // --- Init ---
 async function init() {
-  spriteFrames = await createGorillaSprites();
+  spriteFrames = await createCharacterSprites(settings.character);
   input.attach(canvas);
 
   // Unlock audio on first interaction
