@@ -474,7 +474,7 @@ function handlePauseAction(action) {
 }
 
 function getSettingsItemCount() {
-  return settings.gravityPreset === 'Custom' ? 11 : 10;
+  return settings.gravityPreset === 'Custom' ? 13 : 12;
 }
 
 function getSettingsItemName(index) {
@@ -485,10 +485,11 @@ function getSettingsItemName(index) {
     'gravityPreset',
     ...(isCustom ? ['customGravity'] : []),
     'player2Mode',
+    'character',
+    'projectile',
     'shotTrail',
     'aimPreview',
     'dynamicAimPreview',
-    'projectile',
     'volume',
     'back',
   ];
