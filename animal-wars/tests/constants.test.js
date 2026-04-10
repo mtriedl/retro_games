@@ -102,4 +102,31 @@ describe('constants', () => {
   it('SETTINGS_ARROW_HIT is 44px for touch target', () => {
     assert.equal(C.SETTINGS_ARROW_HIT, 44);
   });
+
+  it('CHARACTER_OPTIONS has 6 entries starting with Gorilla', () => {
+    assert.ok(Array.isArray(C.CHARACTER_OPTIONS));
+    assert.equal(C.CHARACTER_OPTIONS.length, 6);
+    assert.equal(C.CHARACTER_OPTIONS[0], 'Gorilla');
+    assert.equal(C.CHARACTER_OPTIONS[5], 'Goku');
+  });
+
+  it('CHARACTER_PREVIEW_SIZE is 32', () => {
+    assert.equal(C.CHARACTER_PREVIEW_SIZE, 32);
+  });
+
+  it('SETTINGS_ROW_H is 36 for uniform row height', () => {
+    assert.equal(C.SETTINGS_ROW_H, 36);
+  });
+
+  it('SETTINGS_ROW_GAP is 2', () => {
+    assert.equal(C.SETTINGS_ROW_GAP, 2);
+  });
+
+  it('SETTINGS_VISIBLE_ROWS is 8', () => {
+    assert.equal(C.SETTINGS_VISIBLE_ROWS, 8);
+  });
+
+  it('SETTINGS_SCROLL_PADDING is 3', () => {
+    assert.equal(C.SETTINGS_SCROLL_PADDING, 3);
+  });
 });

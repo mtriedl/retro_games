@@ -62,8 +62,8 @@ export const MENU_BUTTON_MIN_H = 44;
 
 // Settings arrow buttons — visual 28px constrained by row height,
 // but touch hit area expanded to 44x44 (centered on arrow)
-export const SETTINGS_ROW_H = 28;
-export const SETTINGS_ROW_GAP = 4;
+export const SETTINGS_ROW_H = 36;
+export const SETTINGS_ROW_GAP = 2;
 export const SETTINGS_ARROW_W = 28;
 export const SETTINGS_ARROW_HIT = 44;
 
@@ -82,6 +82,10 @@ export const BANANA_COLOR = '#FFFF00';
 export const BANANA_TIP_COLOR = '#AA5500';
 export const PROJECTILE_SPRITE_SIZE = 16;
 export const PROJECTILE_OPTIONS = ['Banana', 'Dynamite'];
+export const CHARACTER_OPTIONS = ['Gorilla', 'Robot', 'Alien', 'Dinosaur', 'Penguin', 'Goku'];
+export const CHARACTER_PREVIEW_SIZE = 32;
+export const SETTINGS_VISIBLE_ROWS = 8;
+export const SETTINGS_SCROLL_PADDING = 3;
 
 export const EGA_BUILDING_COLORS = [
   '#AA0000', '#0000AA', '#00AA00', '#00AAAA',
