@@ -118,6 +118,11 @@ async function init() {
   // Mouse handler for menus
   canvas.addEventListener('click', handleClick);
 
+  // Touch handlers for slider and menu interaction
+  canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+  canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+  canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+
   // Start loop
   requestAnimationFrame(gameLoop);
 }
@@ -672,19 +677,28 @@ function handleSliderInputKey(key) {
 }
 
 function handleClick(e) {
-  // Convert click coords to canvas space
   const rect = canvas.getBoundingClientRect();
   const scaleX = CANVAS_WIDTH / rect.width;
   const scaleY = CANVAS_HEIGHT / rect.height;
-  const cx = (e.clientX - rect.left) * scaleX;
-  const cy = (e.clientY - rect.top) * scaleY;
+  let clientX, clientY;
+  if (e.changedTouches) {
+    clientX = e.changedTouches[0].clientX;
+    clientY = e.changedTouches[0].clientY;
+  } else {
+    clientX = e.clientX;
+    clientY = e.clientY;
+  }
+  const cx = (clientX - rect.left) * scaleX;
+  const cy = (clientY - rect.top) * scaleY;
 
-  // Menu item click detection
   if (game.state === STATE.TITLE_SCREEN) {
     const items = ['new_game', 'settings', 'fullscreen'];
     for (let i = 0; i < items.length; i++) {
-      const itemY = 200 + i * 30;
-      if (cy >= itemY - 12 && cy <= itemY + 4 && cx >= CANVAS_WIDTH / 2 - 80 && cx <= CANVAS_WIDTH / 2 + 80) {
+      const itemY = 200 + i * 54;
+      const w = 180;
+      const h = MENU_BUTTON_MIN_H;
+      const x = CANVAS_WIDTH / 2 - w / 2;
+      if (cx >= x && cx <= x + w && cy >= itemY - h / 2 && cy <= itemY + h / 2) {
         game.menuIndex = i;
         handleTitleAction(items[i]);
         break;
@@ -693,14 +707,225 @@ function handleClick(e) {
   } else if (game.state === STATE.PAUSED) {
     const items = ['resume', 'restart', 'settings', 'quit'];
     for (let i = 0; i < items.length; i++) {
-      const itemY = 180 + i * 28;
-      if (cy >= itemY - 12 && cy <= itemY + 4 && cx >= CANVAS_WIDTH / 2 - 80 && cx <= CANVAS_WIDTH / 2 + 80) {
+      const itemY = 170 + i * 52;
+      const w = 200;
+      const h = MENU_BUTTON_MIN_H;
+      const x = CANVAS_WIDTH / 2 - w / 2;
+      if (cx >= x && cx <= x + w && cy >= itemY - h / 2 && cy <= itemY + h / 2) {
         game.menuIndex = i;
         handlePauseAction(items[i]);
         break;
       }
     }
+  } else if (game.state === STATE.GAME_OVER) {
+    game.state = STATE.TITLE_SCREEN;
+    game.menuIndex = 0;
+  } else if (game.state === STATE.SETTINGS) {
+    // Settings rows: detect arrow button taps with expanded 44px hit areas
+    // Note from review: 44px hit areas on 32px-spaced rows overlap adjacent rows by ~4px.
+    // The loop iterates top-to-bottom, so the upper row wins on overlap — this is intentional.
+    const rowH = SETTINGS_ROW_H;
+    const rowGap = SETTINGS_ROW_GAP;
+    const startY = 68;
+    const rowW = 340;
+    const rowX = CANVAS_WIDTH / 2 - rowW / 2;
+    const arrowW = SETTINGS_ARROW_W;
+    const hitSize = SETTINGS_ARROW_HIT;
+    const itemCount = getSettingsItemCount();
+
+    for (let i = 0; i < itemCount; i++) {
+      const y = startY + i * (rowH + rowGap);
+      const itemName = getSettingsItemName(i);
+
+      if (itemName === 'back') {
+        const bw = 120;
+        const bx = CANVAS_WIDTH / 2 - bw / 2;
+        if (cx >= bx && cx <= bx + bw && cy >= y && cy <= y + rowH) {
+          handleSettingsKey('Enter');
+          game.settingsIndex = i;
+          return;
+        }
+        continue;
+      }
+
+      if (cy >= y && cy <= y + rowH) {
+        game.settingsIndex = i;
+        const valueX = rowX + rowW - 100;
+        const leftArrowX = valueX - 70;
+        const rightArrowX = rowX + rowW - arrowW - 4;
+
+        // Left arrow — 44px hit area centered on visual arrow
+        const leftHitX = leftArrowX - (hitSize - arrowW) / 2;
+        const arrowCenterY = y + rowH / 2;
+        if (cx >= leftHitX && cx <= leftHitX + hitSize &&
+            cy >= arrowCenterY - hitSize / 2 && cy <= arrowCenterY + hitSize / 2) {
+          handleSettingsKey('ArrowLeft');
+          return;
+        }
+        // Right arrow — 44px hit area centered on visual arrow
+        const rightHitX = rightArrowX - (hitSize - arrowW) / 2;
+        if (cx >= rightHitX && cx <= rightHitX + hitSize &&
+            cy >= arrowCenterY - hitSize / 2 && cy <= arrowCenterY + hitSize / 2) {
+          handleSettingsKey('ArrowRight');
+          return;
+        }
+
+        // Custom gravity — tap value area to focus hidden input
+        if (itemName === 'customGravity') {
+          const gravInput = document.getElementById('custom-gravity-input');
+          if (gravInput) {
+            gravInput.value = game.customGravityInput;
+            gravInput.focus();
+            gravInput.oninput = () => {
+              game.customGravityInput = gravInput.value;
+              const parsed = parseFloat(gravInput.value);
+              if (!isNaN(parsed) && parsed >= 0.1) {
+                settings.customGravity = parsed;
+              }
+            };
+            gravInput.onblur = () => {
+              const parsed = parseFloat(gravInput.value);
+              if (!isNaN(parsed) && parsed >= 0.1) {
+                settings.customGravity = parsed;
+              }
+              game.customGravityInput = String(settings.customGravity);
+              saveSettings(settings);
+              gravInput.oninput = null;
+              gravInput.onblur = null;
+            };
+          }
+          return;
+        }
+        break;
+      }
+    }
   }
+}
+
+function canvasCoords(touch) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = CANVAS_WIDTH / rect.width;
+  const scaleY = CANVAS_HEIGHT / rect.height;
+  return {
+    x: (touch.clientX - rect.left) * scaleX,
+    y: (touch.clientY - rect.top) * scaleY,
+  };
+}
+
+function handleTouchStart(e) {
+  e.preventDefault();
+  const touch = e.changedTouches[0];
+  const { x, y } = canvasCoords(touch);
+  game.touchStartPos = { x, y };
+
+  // Slider interaction during PLAYER_INPUT — needs immediate response for dragging
+  if (game.state === STATE.PLAYER_INPUT && settings.inputMethod === 'sliders' && !isAITurn()) {
+    const geo = renderer.getSliderGeometry();
+
+    if (hitTestSlider(x, y, geo.angle)) {
+      game.activeSliderDrag = 'angle';
+      updateSliderFromX(x, geo.angle, 'angle');
+      return;
+    }
+
+    if (hitTestSlider(x, y, geo.velocity)) {
+      game.activeSliderDrag = 'velocity';
+      updateSliderFromX(x, geo.velocity, 'velocity');
+      return;
+    }
+  }
+}
+
+function handleTouchMove(e) {
+  e.preventDefault();
+  if (!game.activeSliderDrag) return;
+
+  const touch = e.changedTouches[0];
+  const { x } = canvasCoords(touch);
+  const geo = renderer.getSliderGeometry();
+  const slider = geo[game.activeSliderDrag];
+  updateSliderFromX(x, slider, game.activeSliderDrag);
+}
+
+// handleTouchEnd handles all activation events: fire button, pause button, and menu items.
+// This gives users the standard mobile UX of cancelling a tap by dragging away
+// (if the finger moved more than 15px from the start, the tap is ignored).
+function handleTouchEnd(e) {
+  e.preventDefault();
+
+  // If a slider was being dragged, just release it
+  if (game.activeSliderDrag) {
+    game.activeSliderDrag = null;
+    return;
+  }
+
+  const touch = e.changedTouches[0];
+  const { x, y } = canvasCoords(touch);
+
+  // Cancel if finger moved too far from start (drag, not tap)
+  if (game.touchStartPos) {
+    const dx = x - game.touchStartPos.x;
+    const dy = y - game.touchStartPos.y;
+    if (dx * dx + dy * dy > 15 * 15) {
+      game.touchStartPos = null;
+      return;
+    }
+  }
+  game.touchStartPos = null;
+
+  // Pause button hit test
+  if (game.state === STATE.PLAYER_INPUT || game.state === STATE.PROJECTILE_FLIGHT) {
+    const px = PAUSE_BUTTON_X;
+    const py = PAUSE_BUTTON_Y;
+    const hitSize = PAUSE_BUTTON_HIT_SIZE;
+    if (x >= px - (hitSize - 24) && x <= px + 24 && y >= py && y <= py + hitSize) {
+      enterPause();
+      return;
+    }
+  }
+
+  // Fire button (touch-up activation)
+  if (game.state === STATE.PLAYER_INPUT && settings.inputMethod === 'sliders' && !isAITurn()) {
+    const geo = renderer.getSliderGeometry();
+    const fb = geo.fire;
+    if (x >= fb.x && x <= fb.x + fb.width && y >= fb.y && y <= fb.y + fb.height) {
+      const sv = game.sliderValues[game.activePlayer];
+      game.lastInputs[game.activePlayer].angle = sv.angle;
+      game.lastInputs[game.activePlayer].velocity = sv.velocity;
+      fireBanana(sv.angle, sv.velocity);
+      return;
+    }
+  }
+
+  // Menu/settings/game-over tap — forward to click handler
+  // Note from review: handleClick receives both native clicks and forwarded touch events.
+  // e.preventDefault() in touch handlers suppresses the synthetic click that mobile browsers
+  // emit ~300ms later, so handleClick won't fire twice.
+  handleClick(e);
+}
+
+function hitTestSlider(x, y, slider) {
+  const thumbX = slider.x + slider.width * ((currentSliderValue(slider) - slider.min) / (slider.max - slider.min));
+  const hitR = SLIDER_THUMB_HIT_RADIUS;
+
+  // Hit the thumb?
+  if (Math.abs(x - thumbX) <= hitR && Math.abs(y - slider.y) <= hitR) return true;
+
+  // Hit the track?
+  if (x >= slider.x && x <= slider.x + slider.width && Math.abs(y - slider.y) <= 12) return true;
+
+  return false;
+}
+
+function currentSliderValue(slider) {
+  return game.sliderValues[game.activePlayer][slider.which];
+}
+
+function updateSliderFromX(x, slider, which) {
+  const pct = Math.max(0, Math.min(1, (x - slider.x) / slider.width));
+  const raw = slider.min + pct * (slider.max - slider.min);
+  const value = Math.round(Math.max(slider.min, Math.min(slider.max, raw)));
+  game.sliderValues[game.activePlayer][which] = value;
 }
 
 // --- Game flow ---
