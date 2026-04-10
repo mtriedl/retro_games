@@ -3,7 +3,7 @@ import {
   CANVAS_WIDTH, CANVAS_HEIGHT,
   SKY_DAY_COLOR, SKY_NIGHT_COLOR,
   WINDOW_LIT_COLOR, WINDOW_UNLIT_COLOR,
-  BANANA_COLOR, BANANA_TIP_COLOR, BANANA_RADIUS,
+  BANANA_COLOR, BANANA_TIP_COLOR, BANANA_RADIUS, PROJECTILE_SPRITE_SIZE,
   GORILLA_FRAME_SIZE, GORILLA_COLLISION_WIDTH, GORILLA_COLLISION_HEIGHT,
   GRAVITY_PRESETS, VELOCITY_SCALE, GRAVITY_SCALE,
   INPUT_BAR_HEIGHT, INPUT_BAR_Y, VELOCITY_MAX,
@@ -137,7 +137,7 @@ export function createRenderer(ctx) {
       ctx.imageSmoothingEnabled = true;
     },
 
-    drawBanana(banana, alpha) {
+    drawProjectile(banana, alpha, sprite) {
       if (!banana.active) return;
       // Interpolate position for smooth rendering
       const rx = banana.prevX + (banana.x - banana.prevX) * alpha;
@@ -147,17 +147,26 @@ export function createRenderer(ctx) {
       ctx.translate(rx, ry);
       ctx.rotate(banana.rotation);
 
-      // Crescent banana shape
-      ctx.fillStyle = BANANA_COLOR;
-      ctx.beginPath();
-      ctx.arc(0, 0, BANANA_RADIUS, 0.3, Math.PI - 0.3);
-      ctx.arc(0, -1, BANANA_RADIUS - 1.5, Math.PI - 0.3, 0.3, true);
-      ctx.fill();
+      if (sprite) {
+        // Custom sprite: draw 16x16 centered
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(sprite,
+          -PROJECTILE_SPRITE_SIZE / 2, -PROJECTILE_SPRITE_SIZE / 2,
+          PROJECTILE_SPRITE_SIZE, PROJECTILE_SPRITE_SIZE);
+        ctx.imageSmoothingEnabled = true;
+      } else {
+        // Procedural banana scaled to BANANA_RADIUS (8)
+        ctx.fillStyle = BANANA_COLOR;
+        ctx.beginPath();
+        ctx.arc(0, 0, BANANA_RADIUS, 0.3, Math.PI - 0.3);
+        ctx.arc(0, -2, BANANA_RADIUS - 3, Math.PI - 0.3, 0.3, true);
+        ctx.fill();
 
-      // Tips
-      ctx.fillStyle = BANANA_TIP_COLOR;
-      ctx.fillRect(-BANANA_RADIUS + 1, -1, 2, 2);
-      ctx.fillRect(BANANA_RADIUS - 3, -1, 2, 2);
+        // Tips
+        ctx.fillStyle = BANANA_TIP_COLOR;
+        ctx.fillRect(-BANANA_RADIUS + 2, -2, 4, 4);
+        ctx.fillRect(BANANA_RADIUS - 6, -2, 4, 4);
+      }
 
       ctx.restore();
     },
@@ -457,12 +466,12 @@ export function createRenderer(ctx) {
       ctx.fillRect(cx + 2, cy - 5, 3, 10);
     },
 
-    drawBananaTracker(bananaX) {
+    drawBananaTracker(bananaX, label) {
       ctx.fillStyle = '#FFFF00';
       ctx.font = '8px monospace';
       ctx.textAlign = 'center';
       const x = Math.max(20, Math.min(CANVAS_WIDTH - 20, bananaX));
-      ctx.fillText('\u25B2 BANANA', x, 10);
+      ctx.fillText('\u25B2 ' + (label || 'BANANA'), x, 10);
     },
 
     drawShotTrail(trail, alpha) {
