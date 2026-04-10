@@ -488,7 +488,7 @@ export function createRenderer(ctx) {
       if (localAngle === null) return;
       const worldAngleDeg = playerIndex === 0 ? localAngle : 180 - localAngle;
       const rad = worldAngleDeg * Math.PI / 180;
-      const cx = gorilla.x + (playerIndex === 0 ? GORILLA_FRAME_SIZE / 2 : -GORILLA_FRAME_SIZE / 2);
+      const cx = gorilla.x;
       const cy = gorilla.y - GORILLA_FRAME_SIZE / 2;
       const startOffset = GORILLA_FRAME_SIZE / 2 + 4;
       const len = 50;
@@ -514,7 +514,7 @@ export function createRenderer(ctx) {
       const speed = velocity * VELOCITY_SCALE;
       let vx = speed * Math.cos(rad);
       let vy = -speed * Math.sin(rad);
-      let px = gorilla.x + (playerIndex === 0 ? GORILLA_FRAME_SIZE / 2 : -GORILLA_FRAME_SIZE / 2);
+      let px = gorilla.x;
       let py = gorilla.y - GORILLA_FRAME_SIZE / 2;
       const g = gravityValue * GRAVITY_SCALE;
       const dt = 1 / 60;
