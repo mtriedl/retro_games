@@ -442,19 +442,19 @@ export function createRenderer(ctx) {
       const cy = PAUSE_BUTTON_CY;
       const r = PAUSE_BUTTON_RADIUS;
 
-      // Circle background
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.10)';
+      // Filled circle background
+      ctx.fillStyle = 'rgba(40, 40, 40, 0.85)';
       ctx.beginPath();
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = '#555555';
+      ctx.strokeStyle = '#888888';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
       ctx.stroke();
 
       // Pause bars
-      ctx.fillStyle = '#AAAAAA';
+      ctx.fillStyle = '#CCCCCC';
       ctx.fillRect(cx - 5, cy - 5, 3, 10);
       ctx.fillRect(cx + 2, cy - 5, 3, 10);
     },
@@ -554,7 +554,7 @@ export function createRenderer(ctx) {
     },
 
     drawPauseMenu(selectedIndex) {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.82)';
       ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
       ctx.fillStyle = '#FFFFFF';
