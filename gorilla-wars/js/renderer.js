@@ -608,6 +608,7 @@ export function createRenderer(ctx) {
         { label: 'Shot Trail', value: settings.shotTrail ? 'ON' : 'OFF', cycle: true },
         { label: 'Aim Preview', value: settings.aimPreview ? 'ON' : 'OFF', cycle: true },
         { label: 'Dynamic Aim', value: settings.dynamicAimPreview ? 'ON' : 'OFF', cycle: true },
+        { label: 'Projectile', value: settings.projectile, cycle: true },
         { label: 'Volume', value: null, volume: settings.volume, cycle: true },
         { label: 'Back', value: null, cycle: false, isBack: true },
       ];

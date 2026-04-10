@@ -6,7 +6,7 @@ import {
   EXPLOSION_BUILDING_RADIUS, EXPLOSION_GORILLA_RADIUS,
   GORILLA_FRAME_SIZE, BANANA_RADIUS,
   GORILLA_COLLISION_WIDTH, GORILLA_COLLISION_HEIGHT,
-  GRAVITY_PRESETS,
+  GRAVITY_PRESETS, PROJECTILE_OPTIONS,
   DEFAULT_ANGLE, DEFAULT_VELOCITY, VELOCITY_MAX,
   INPUT_BAR_Y, INPUT_BAR_HEIGHT,
   SLIDER_THUMB_HIT_RADIUS,
@@ -18,7 +18,7 @@ import { loadSettings, saveSettings, getGravityValue } from './settings.js';
 import { generateCity, initHeightmap, carveExplosion } from './buildings.js';
 import { createProjectile, stepSimulation, checkCollisions } from './physics.js';
 import { createInputHandler } from './input.js';
-import { createGorillaSprites } from './sprites.js';
+import { createGorillaSprites, loadProjectileSprite } from './sprites.js';
 import { createAudioEngine } from './audio.js';
 import { createRenderer } from './renderer.js';
 import { calculateAIShot } from './ai.js';
@@ -44,6 +44,7 @@ const input = createInputHandler();
 const audio = createAudioEngine();
 let spriteFrames = [];
 let settings = loadSettings();
+let projectileSprite = null;
 
 // --- Game state ---
 const game = {
@@ -471,7 +472,7 @@ function handlePauseAction(action) {
 }
 
 function getSettingsItemCount() {
-  return settings.gravityPreset === 'Custom' ? 10 : 9;
+  return settings.gravityPreset === 'Custom' ? 11 : 10;
 }
 
 function getSettingsItemName(index) {
@@ -485,6 +486,7 @@ function getSettingsItemName(index) {
     'shotTrail',
     'aimPreview',
     'dynamicAimPreview',
+    'projectile',
     'volume',
     'back',
   ];
@@ -606,6 +608,13 @@ function handleSettingsKey(key) {
     case 'dynamicAimPreview':
       settings.dynamicAimPreview = !settings.dynamicAimPreview;
       break;
+    case 'projectile': {
+      const idx = PROJECTILE_OPTIONS.indexOf(settings.projectile);
+      const newIdx = (idx + dir + PROJECTILE_OPTIONS.length) % PROJECTILE_OPTIONS.length;
+      settings.projectile = PROJECTILE_OPTIONS[newIdx];
+      loadProjectileSprite(settings.projectile).then(img => { projectileSprite = img; });
+      break;
+    }
     case 'volume': {
       settings.volume = Math.round(Math.min(1, Math.max(0, settings.volume + dir * 0.1)) * 10) / 10;
       audio.setVolume(settings.volume);
@@ -1206,11 +1215,11 @@ function drawGameScene(alpha) {
     }
   }
 
-  renderer.drawBanana(game.banana, alpha);
+  renderer.drawProjectile(game.banana, alpha, projectileSprite);
   renderer.drawSunMoon(game.isNight, game.celestialSurprised);
 
   if (game.banana.active && game.banana.y < 0) {
-    renderer.drawBananaTracker(game.banana.x);
+    renderer.drawBananaTracker(game.banana.x, settings.projectile.toUpperCase());
   }
 
   for (const e of game.explosions) renderer.drawExplosion(e);
