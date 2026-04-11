@@ -52,11 +52,18 @@ describe('constants', () => {
   });
 
   it('exports all game states', () => {
-    const expected = ['TITLE_SCREEN', 'ROUND_START', 'PLAYER_INPUT',
-      'PROJECTILE_FLIGHT', 'IMPACT', 'ROUND_END', 'GAME_OVER', 'PAUSED'];
+    const expected = ['TITLE_SCREEN', 'NEW_GAME', 'ROUND_START', 'PLAYER_INPUT',
+      'PROJECTILE_FLIGHT', 'IMPACT', 'ROUND_END', 'GAME_OVER', 'PAUSED', 'SETTINGS'];
     for (const s of expected) {
       assert.ok(C.STATE[s], `missing state: ${s}`);
     }
+    // Verify no unexpected states exist
+    assert.equal(Object.keys(C.STATE).length, expected.length,
+      `STATE has unexpected entries: ${Object.keys(C.STATE).filter(k => !expected.includes(k))}`);
+  });
+
+  it('STATE.NEW_GAME equals NEW_GAME', () => {
+    assert.equal(C.STATE.NEW_GAME, 'NEW_GAME');
   });
 
   it('exports EGA building colors excluding sky conflicts', () => {
