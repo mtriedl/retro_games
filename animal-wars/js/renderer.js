@@ -592,7 +592,7 @@ export function createRenderer(ctx) {
       });
     },
 
-    drawSettingsMenu(settings, selectedIndex, editingCustom, customValue, scrollOffset = 0, characterPreview = null, projectileSprite = null) {
+    drawSettingsMenu(settings, selectedIndex, editingCustom, customValue, scrollOffset = 0, p1CharacterPreview = null, p2CharacterPreview = null, projectileSprite = null) {
       ctx.fillStyle = SKY_NIGHT_COLOR;
       ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
@@ -607,7 +607,8 @@ export function createRenderer(ctx) {
         { label: 'Gravity', value: `${settings.gravityPreset} (${settings.gravityPreset === 'Custom' ? settings.customGravity : (GRAVITY_PRESETS.find(p => p.name === settings.gravityPreset)?.gravity ?? '')})`, cycle: true },
         ...(settings.gravityPreset === 'Custom' ? [{ label: 'Custom G', value: editingCustom ? customValue + '_' : String(settings.customGravity), cycle: false }] : []),
         { label: 'Player 2', value: settings.player2Mode, cycle: true },
-        { label: 'Character', value: settings.character, cycle: true, preview: characterPreview, hasPreview: true },
+        { label: 'P1 Char', value: settings.p1Character, cycle: true, preview: p1CharacterPreview, hasPreview: true },
+        ...(settings.player2Mode === 'human' ? [{ label: 'P2 Char', value: settings.p2Character, cycle: true, preview: p2CharacterPreview, hasPreview: true }] : []),
         { label: 'Projectile', value: settings.projectile, cycle: true, preview: projectileSprite, hasPreview: true },
         { label: 'Shot Trail', value: settings.shotTrail ? 'ON' : 'OFF', cycle: true },
         { label: 'Aim Preview', value: settings.aimPreview ? 'ON' : 'OFF', cycle: true },

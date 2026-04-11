@@ -82,7 +82,8 @@ const game = {
   settingsIndex: 0,
   settingsFrom: null,
   settingsScrollOffset: 0,
-  characterPreviewSprite: null,
+  p1CharacterPreviewSprite: null,
+  p2CharacterPreviewSprite: null,
   customGravityInput: '',
   buildingAnimProgress: 0,
   roundEndTimer: 0,
@@ -445,7 +446,8 @@ function handleTitleAction(action) {
       game.customGravityInput = String(settings.customGravity);
       game.previousState = game.state;
       game.state = STATE.SETTINGS;
-      loadCharacterPreview(settings.character).then(img => { game.characterPreviewSprite = img; });
+      loadCharacterPreview(settings.p1Character).then(img => { game.p1CharacterPreviewSprite = img; });
+      loadCharacterPreview(settings.p2Character).then(img => { game.p2CharacterPreviewSprite = img; });
       loadProjectileSprite(settings.projectile).then(img => { projectileSprite = img; });
       break;
     case 'fullscreen':
@@ -473,7 +475,8 @@ function handlePauseAction(action) {
       game.customGravityInput = String(settings.customGravity);
       game.previousState = game.state;
       game.state = STATE.SETTINGS;
-      loadCharacterPreview(settings.character).then(img => { game.characterPreviewSprite = img; });
+      loadCharacterPreview(settings.p1Character).then(img => { game.p1CharacterPreviewSprite = img; });
+      loadCharacterPreview(settings.p2Character).then(img => { game.p2CharacterPreviewSprite = img; });
       loadProjectileSprite(settings.projectile).then(img => { projectileSprite = img; });
       break;
     case 'quit':
@@ -484,18 +487,23 @@ function handlePauseAction(action) {
 }
 
 function getSettingsItemCount() {
-  return settings.gravityPreset === 'Custom' ? 13 : 12;
+  let count = 11; // base items (without conditionals)
+  if (settings.gravityPreset === 'Custom') count++;
+  if (settings.player2Mode === 'human') count++;
+  return count;
 }
 
 function getSettingsItemName(index) {
   const isCustom = settings.gravityPreset === 'Custom';
+  const isHuman = settings.player2Mode === 'human';
   const items = [
     'inputMethod',
     'rounds',
     'gravityPreset',
     ...(isCustom ? ['customGravity'] : []),
     'player2Mode',
-    'character',
+    'p1Character',
+    ...(isHuman ? ['p2Character'] : []),
     'projectile',
     'shotTrail',
     'aimPreview',
@@ -536,7 +544,8 @@ function handleSettingsKey(key) {
 
   // Enter on Back
   if (key === 'Enter' && itemName === 'back') {
-    createCharacterSprites(settings.character).then(frames => { spriteFrames = frames; });
+    createCharacterSprites(settings.p1Character).then(frames => { p1SpriteFrames = frames; });
+    createCharacterSprites(settings.p2Character).then(frames => { p2SpriteFrames = frames; });
     if (game.settingsFrom === 'title') {
       game.state = STATE.TITLE_SCREEN;
       game.menuIndex = 0;
@@ -549,7 +558,8 @@ function handleSettingsKey(key) {
 
   // Escape also goes back
   if (key === 'Escape') {
-    createCharacterSprites(settings.character).then(frames => { spriteFrames = frames; });
+    createCharacterSprites(settings.p1Character).then(frames => { p1SpriteFrames = frames; });
+    createCharacterSprites(settings.p2Character).then(frames => { p2SpriteFrames = frames; });
     if (game.settingsFrom === 'title') {
       game.state = STATE.TITLE_SCREEN;
       game.menuIndex = 0;
@@ -628,11 +638,18 @@ function handleSettingsKey(key) {
       settings.player2Mode = options[newIdx];
       break;
     }
-    case 'character': {
-      const idx = CHARACTER_OPTIONS.indexOf(settings.character);
+    case 'p1Character': {
+      const idx = CHARACTER_OPTIONS.indexOf(settings.p1Character);
       const newIdx = (idx + dir + CHARACTER_OPTIONS.length) % CHARACTER_OPTIONS.length;
-      settings.character = CHARACTER_OPTIONS[newIdx];
-      loadCharacterPreview(settings.character).then(img => { game.characterPreviewSprite = img; });
+      settings.p1Character = CHARACTER_OPTIONS[newIdx];
+      loadCharacterPreview(settings.p1Character).then(img => { game.p1CharacterPreviewSprite = img; });
+      break;
+    }
+    case 'p2Character': {
+      const idx = CHARACTER_OPTIONS.indexOf(settings.p2Character);
+      const newIdx = (idx + dir + CHARACTER_OPTIONS.length) % CHARACTER_OPTIONS.length;
+      settings.p2Character = CHARACTER_OPTIONS[newIdx];
+      loadCharacterPreview(settings.p2Character).then(img => { game.p2CharacterPreviewSprite = img; });
       break;
     }
     case 'shotTrail':
@@ -1208,7 +1225,8 @@ function render(alpha) {
     case STATE.SETTINGS:
       renderer.drawSettingsMenu(settings, game.settingsIndex,
         settings.gravityPreset === 'Custom', game.customGravityInput,
-        game.settingsScrollOffset, game.characterPreviewSprite, projectileSprite);
+        game.settingsScrollOffset,
+        game.p1CharacterPreviewSprite, game.p2CharacterPreviewSprite, projectileSprite);
       break;
   }
 }
