@@ -28,13 +28,27 @@
 ### Task 1: Settings Data Model — Per-Player Characters
 
 **Files:**
-- Modify: `animal-wars/js/settings.js:5-17` — replace `character` with `p1Character`/`p2Character`
-- Modify: `animal-wars/js/settings.js:19-35` — add migration logic to `loadSettings()`
+- Modify: `animal-wars/js/settings.js` — replace `character` with `p1Character`/`p2Character` in `DEFAULT_SETTINGS`, add migration logic to `loadSettings()`
 - Modify: `animal-wars/tests/settings.test.js`
 
 - [ ] **Step 1: Write failing tests for new defaults and migration**
 
-In `animal-wars/tests/settings.test.js`, find the existing test for `character` default (it will look like `assert.equal(settings.character, 'Gorilla')`). Replace it and add migration tests:
+In `animal-wars/tests/settings.test.js`:
+1. Find and replace the existing `DEFAULT_SETTINGS includes character as Gorilla` test with a check for the new fields.
+2. Update the `loadSettings returns defaults when localStorage is empty` test — it uses `assert.deepEqual(s, DEFAULT_SETTINGS)` which will already pass once `DEFAULT_SETTINGS` is updated, but verify it doesn't reference `character`.
+3. Add migration tests.
+
+Replace the `'DEFAULT_SETTINGS includes character as Gorilla'` test with:
+
+```js
+it('DEFAULT_SETTINGS includes p1Character and p2Character as Gorilla', () => {
+  assert.equal(DEFAULT_SETTINGS.p1Character, 'Gorilla');
+  assert.equal(DEFAULT_SETTINGS.p2Character, 'Gorilla');
+  assert.equal(DEFAULT_SETTINGS.character, undefined);
+});
+```
+
+Then add the following migration tests after it:
 
 ```js
 it('defaults include p1Character and p2Character as Gorilla', () => {
@@ -60,6 +74,16 @@ it('does not overwrite existing p1Character/p2Character during migration', () =>
   }));
   const settings = loadSettings();
   assert.equal(settings.p1Character, 'Alien');
+  assert.equal(settings.p2Character, 'Penguin');
+});
+
+it('migrates legacy character to only the missing per-player field', () => {
+  localStorage.setItem('animal-wars-settings', JSON.stringify({
+    character: 'Robot',
+    p2Character: 'Penguin',
+  }));
+  const settings = loadSettings();
+  assert.equal(settings.p1Character, 'Robot');
   assert.equal(settings.p2Character, 'Penguin');
 });
 ```
@@ -95,10 +119,10 @@ export const DEFAULT_SETTINGS = {
 In `animal-wars/js/settings.js`, after the `Object.assign(base, stored)` line inside `loadSettings()`, add:
 
 ```js
-    // Migrate legacy single-character setting
-    if (stored && stored.character && !stored.p1Character) {
-      base.p1Character = stored.character;
-      base.p2Character = stored.character;
+    // Migrate legacy single-character setting (guard each field independently)
+    if (stored && stored.character) {
+      if (!stored.p1Character) base.p1Character = stored.character;
+      if (!stored.p2Character) base.p2Character = stored.character;
     }
     delete base.character;
 ```
@@ -120,15 +144,26 @@ git commit -m "feat: replace character with p1Character/p2Character in settings"
 ### Task 2: Constants — Add STATE.NEW_GAME
 
 **Files:**
-- Modify: `animal-wars/js/constants.js:122-133` — add NEW_GAME to STATE enum
+- Modify: `animal-wars/js/constants.js` — add `NEW_GAME` to `STATE` enum
 - Modify: `animal-wars/tests/constants.test.js`
 
-- [ ] **Step 1: Write failing test**
+- [ ] **Step 1: Update the existing STATE test and add NEW_GAME test**
 
-In `animal-wars/tests/constants.test.js`, add after the existing STATE tests:
+In `animal-wars/tests/constants.test.js`, the existing `'exports all game states'` test checks only 8 states and is missing `SETTINGS` (already in the enum) and `NEW_GAME` (being added). Replace it with a complete check, and add a specific test for `NEW_GAME`:
 
 ```js
-it('STATE includes NEW_GAME', () => {
+it('exports all game states', () => {
+  const expected = ['TITLE_SCREEN', 'NEW_GAME', 'ROUND_START', 'PLAYER_INPUT',
+    'PROJECTILE_FLIGHT', 'IMPACT', 'ROUND_END', 'GAME_OVER', 'PAUSED', 'SETTINGS'];
+  for (const s of expected) {
+    assert.ok(C.STATE[s], `missing state: ${s}`);
+  }
+  // Verify no unexpected states exist
+  assert.equal(Object.keys(C.STATE).length, expected.length,
+    `STATE has unexpected entries: ${Object.keys(C.STATE).filter(k => !expected.includes(k))}`);
+});
+
+it('STATE.NEW_GAME equals NEW_GAME', () => {
   assert.equal(C.STATE.NEW_GAME, 'NEW_GAME');
 });
 ```
@@ -176,13 +211,11 @@ git commit -m "feat: add STATE.NEW_GAME constant"
 Replace the single `spriteFrames` variable with `p1SpriteFrames`/`p2SpriteFrames` and update all references. This is a pure refactor — no new features, no test failures.
 
 **Files:**
-- Modify: `animal-wars/js/main.js:46-48` — sprite variable declarations
-- Modify: `animal-wars/js/main.js:106-107` — `init()` sprite loading
-- Modify: `animal-wars/js/main.js:1215-1217` — `drawGameScene()` gorilla rendering
+- Modify: `animal-wars/js/main.js` — `spriteFrames` variable declaration, `init()` sprite loading, `drawGameScene()` gorilla rendering loop, `startNewGame()`
 
 - [ ] **Step 1: Replace sprite variable declarations**
 
-In `animal-wars/js/main.js`, replace line 46:
+In `animal-wars/js/main.js`, find the `let spriteFrames = [];` declaration near the top-level variables and replace:
 
 ```js
 let spriteFrames = [];
@@ -197,7 +230,7 @@ let p2SpriteFrames = [];
 
 - [ ] **Step 2: Update `init()` sprite loading**
 
-In `animal-wars/js/main.js`, replace line 107:
+In the `init()` function in `animal-wars/js/main.js`, find the sprite loading line and replace:
 
 ```js
   spriteFrames = await createCharacterSprites(settings.character);
@@ -214,7 +247,7 @@ with:
 
 - [ ] **Step 3: Update `drawGameScene()` gorilla rendering**
 
-In `animal-wars/js/main.js`, replace lines 1215-1217:
+In `drawGameScene()` in `animal-wars/js/main.js`, find the gorilla rendering loop and replace:
 
 ```js
   for (let i = 0; i < 2; i++) {
@@ -233,7 +266,7 @@ with:
 
 - [ ] **Step 4: Update `startNewGame()` to load per-player sprites with AI random character**
 
-In `animal-wars/js/main.js`, replace the `startNewGame()` function (lines 1051-1059):
+In `animal-wars/js/main.js`, replace the entire `startNewGame()` function:
 
 ```js
 function startNewGame() {
@@ -252,6 +285,7 @@ with:
 
 ```js
 async function startNewGame() {
+  game.state = STATE.ROUND_START; // block input during async sprite load
   settings = loadSettings();
   game.totalRounds = settings.rounds;
   game.round = 0;
@@ -270,7 +304,9 @@ async function startNewGame() {
 }
 ```
 
-Note: `CHARACTER_OPTIONS` is already imported at line 9.
+Setting `STATE.ROUND_START` immediately prevents the New Game screen from processing input while sprites load asynchronously. Since `handleKey` has no `ROUND_START` case, keypresses are harmlessly ignored during this brief window. `startRound()` then sets the real gameplay state.
+
+Note: `CHARACTER_OPTIONS` is already imported at the top of the file.
 
 - [ ] **Step 5: Verify the game loads and both players render correctly**
 
@@ -290,16 +326,12 @@ git commit -m "feat: per-player sprite loading with AI random character"
 Split the single "Character" row in Settings into "P1 Character" and "P2 Character" (P2 conditional on human mode). Update all related state, preview sprites, and entry/exit behavior.
 
 **Files:**
-- Modify: `animal-wars/js/main.js:50-103` — game state: add `p1CharacterPreviewSprite`, `p2CharacterPreviewSprite`, remove `characterPreviewSprite`
-- Modify: `animal-wars/js/main.js:432-445` — `handleTitleAction()` settings entry
-- Modify: `animal-wars/js/main.js:466-473` — `handlePauseAction()` settings entry
-- Modify: `animal-wars/js/main.js:482-503` — `getSettingsItemCount()` / `getSettingsItemName()`
-- Modify: `animal-wars/js/main.js:516-658` — `handleSettingsKey()` character cycling
-- Modify: `animal-wars/js/main.js:534-548` — settings exit: load both sprite sets
+- Modify: `animal-wars/js/main.js` — `game` object state, `handleTitleAction()`, `handlePauseAction()`, `getSettingsItemCount()`/`getSettingsItemName()`, `handleSettingsKey()` character cycling, settings exit sprite loading
+- Modify: `animal-wars/js/renderer.js` — `drawSettingsMenu()` signature and items array
 
 - [ ] **Step 1: Update game state variables**
 
-In `animal-wars/js/main.js`, replace line 84:
+In the `game` object in `animal-wars/js/main.js`, find the `characterPreviewSprite: null` field and replace:
 
 ```js
   characterPreviewSprite: null,
@@ -314,7 +346,7 @@ with:
 
 - [ ] **Step 2: Update `getSettingsItemName()` — replace `'character'` with P1/P2**
 
-Replace the `getSettingsItemName` function (lines 486-503):
+Replace the entire `getSettingsItemName()` function:
 
 ```js
 function getSettingsItemName(index) {
@@ -341,7 +373,7 @@ function getSettingsItemName(index) {
 
 - [ ] **Step 3: Update `getSettingsItemCount()`**
 
-Replace the `getSettingsItemCount` function (lines 482-484):
+Replace the entire `getSettingsItemCount()` function (note: the existing code returns 12/13 due to a pre-existing off-by-one; the new code corrects this with a base of 11 plus two conditionals):
 
 ```js
 function getSettingsItemCount() {
@@ -354,7 +386,7 @@ function getSettingsItemCount() {
 
 - [ ] **Step 4: Update `handleSettingsKey()` — replace character case with p1Character/p2Character**
 
-In `handleSettingsKey()`, replace the `case 'character':` block (lines 627-632):
+In `handleSettingsKey()`, find the `case 'character':` block and replace:
 
 ```js
     case 'character': {
@@ -387,7 +419,7 @@ with:
 
 - [ ] **Step 5: Update settings entry in `handleTitleAction()` — load both previews**
 
-In `handleTitleAction()`, replace the settings case (lines 437-445):
+In `handleTitleAction()`, find the `case 'settings':` block and replace:
 
 ```js
     case 'settings':
@@ -420,7 +452,7 @@ with:
 
 - [ ] **Step 6: Update settings entry in `handlePauseAction()` — load both previews**
 
-In `handlePauseAction()`, replace the settings case (lines 466-473):
+In `handlePauseAction()`, find the `case 'settings':` block and replace:
 
 ```js
     case 'settings':
@@ -466,9 +498,36 @@ Replace each occurrence with:
     createCharacterSprites(settings.p2Character).then(frames => { p2SpriteFrames = frames; });
 ```
 
-- [ ] **Step 8: Update settings render call**
+- [ ] **Step 8: Update `drawSettingsMenu()` signature in renderer (must happen before updating the caller)**
 
-In `render()`, replace the `STATE.SETTINGS` case (lines 1196-1200):
+In `animal-wars/js/renderer.js`, change the `drawSettingsMenu` signature from:
+
+```js
+drawSettingsMenu(settings, selectedIndex, editingCustom, customValue, scrollOffset = 0, characterPreview = null, projectileSprite = null) {
+```
+
+to:
+
+```js
+drawSettingsMenu(settings, selectedIndex, editingCustom, customValue, scrollOffset = 0, p1CharacterPreview = null, p2CharacterPreview = null, projectileSprite = null) {
+```
+
+And update the items array inside `drawSettingsMenu()` — replace the single Character row:
+
+```js
+{ label: 'Character', value: settings.character, cycle: true, preview: characterPreview, hasPreview: true },
+```
+
+with:
+
+```js
+{ label: 'P1 Char', value: settings.p1Character, cycle: true, preview: p1CharacterPreview, hasPreview: true },
+...(settings.player2Mode === 'human' ? [{ label: 'P2 Char', value: settings.p2Character, cycle: true, preview: p2CharacterPreview, hasPreview: true }] : []),
+```
+
+- [ ] **Step 9: Update settings render call**
+
+In `render()`, find the `STATE.SETTINGS` case and replace:
 
 ```js
     case STATE.SETTINGS:
@@ -489,7 +548,7 @@ with:
       break;
 ```
 
-- [ ] **Step 9: Verify settings menu works**
+- [ ] **Step 10: Verify settings menu works**
 
 Run: Open browser, go to Settings. Verify:
 - "P1 Character" and "P2 Character" rows appear (when P2 mode is Human)
@@ -497,10 +556,10 @@ Run: Open browser, go to Settings. Verify:
 - Setting P2 to AI hides the P2 Character row
 - Back returns to title, sprites load correctly
 
-- [ ] **Step 10: Commit**
+- [ ] **Step 11: Commit**
 
 ```bash
-git add animal-wars/js/main.js
+git add animal-wars/js/main.js animal-wars/js/renderer.js
 git commit -m "feat: split settings character into per-player P1/P2 rows"
 ```
 
@@ -511,44 +570,17 @@ git commit -m "feat: split settings character into per-player P1/P2 rows"
 Extract the row-drawing logic from `drawSettingsMenu()` into a shared helper, then add `drawNewGameMenu()` as a thin wrapper.
 
 **Files:**
-- Modify: `animal-wars/js/renderer.js:595-758` — refactor `drawSettingsMenu()`, add `drawMenuRows()` and `drawNewGameMenu()`
+- Modify: `animal-wars/js/renderer.js` — extract `drawMenuRows()` from `drawSettingsMenu()`, add `drawNewGameMenu()`
 
-- [ ] **Step 1: Update `drawSettingsMenu()` signature**
+- [ ] **Step 1: Verify `drawSettingsMenu()` signature was updated in Task 4**
 
-Change the signature from:
+Task 4, Step 8 already updated the `drawSettingsMenu()` signature to accept `p1CharacterPreview, p2CharacterPreview` and updated the items array with P1/P2 character rows. Confirm this is in place before proceeding.
 
-```js
-drawSettingsMenu(settings, selectedIndex, editingCustom, customValue, scrollOffset = 0, characterPreview = null, projectileSprite = null) {
-```
+- [ ] **Step 2: (No action needed — items array updated in Task 4)**
 
-to:
+The items array was already updated in Task 4, Step 8 to use `p1Character`/`p2Character` with conditional P2 row. Skip to Step 3.
 
-```js
-drawSettingsMenu(settings, selectedIndex, editingCustom, customValue, scrollOffset = 0, p1CharacterPreview = null, p2CharacterPreview = null, projectileSprite = null) {
-```
-
-- [ ] **Step 2: Update the items array inside `drawSettingsMenu()`**
-
-Replace the items array (lines 604-617):
-
-```js
-      const items = [
-        { label: 'Input', value: settings.inputMethod === 'sliders' ? 'Sliders' : 'Classic', cycle: true },
-        { label: 'Rounds', value: String(settings.rounds), cycle: true },
-        { label: 'Gravity', value: `${settings.gravityPreset} (${settings.gravityPreset === 'Custom' ? settings.customGravity : (GRAVITY_PRESETS.find(p => p.name === settings.gravityPreset)?.gravity ?? '')})`, cycle: true },
-        ...(settings.gravityPreset === 'Custom' ? [{ label: 'Custom G', value: editingCustom ? customValue + '_' : String(settings.customGravity), cycle: false }] : []),
-        { label: 'Player 2', value: settings.player2Mode, cycle: true },
-        { label: 'Character', value: settings.character, cycle: true, preview: characterPreview, hasPreview: true },
-        { label: 'Projectile', value: settings.projectile, cycle: true, preview: projectileSprite, hasPreview: true },
-        { label: 'Shot Trail', value: settings.shotTrail ? 'ON' : 'OFF', cycle: true },
-        { label: 'Aim Preview', value: settings.aimPreview ? 'ON' : 'OFF', cycle: true },
-        { label: 'Dynamic Aim', value: settings.dynamicAimPreview ? 'ON' : 'OFF', cycle: true },
-        { label: 'Volume', value: null, volume: settings.volume, cycle: true },
-        { label: 'Back', value: null, cycle: false, isBack: true },
-      ];
-```
-
-with:
+The items array should now look like:
 
 ```js
       const items = [
@@ -897,7 +929,147 @@ git commit -m "refactor: extract cycleSettingItem shared helper from handleSetti
 
 ---
 
-### Task 7: New Game Screen — State Handlers (Key, Click, Render)
+### Task 7: Shared Click Handler — Extract `handleMenuClick()`
+
+Extract the row hit-testing logic from the `STATE.SETTINGS` branch of `handleClick()` into a shared `handleMenuClick()` function, then refactor the settings branch to use it. This prevents duplicating ~75 lines when the New Game click handler is added in Task 8.
+
+**Files:**
+- Modify: `animal-wars/js/main.js` — extract `handleMenuClick()`, refactor settings click branch
+
+- [ ] **Step 1: Create `handleMenuClick()` function**
+
+Add this function in `main.js` near the other shared helpers (`cycleSettingItem`):
+
+```js
+function handleMenuClick(cx, cy, opts) {
+  const { getItemCount, getItemName, getIndex, setIndex, getScroll, setScroll, onBottomButton, onKey } = opts;
+  const rowH = SETTINGS_ROW_H;
+  const rowGap = SETTINGS_ROW_GAP;
+  const startY = 68;
+  const rowW = 340;
+  const rowX = CANVAS_WIDTH / 2 - rowW / 2;
+  const arrowW = SETTINGS_ARROW_W;
+  const hitSize = SETTINGS_ARROW_HIT;
+  const itemCount = getItemCount();
+  const visibleH = SETTINGS_VISIBLE_ROWS * rowH + (SETTINGS_VISIBLE_ROWS - 1) * rowGap;
+  const maxScroll = Math.max(0, itemCount + SETTINGS_SCROLL_PADDING - SETTINGS_VISIBLE_ROWS);
+
+  // Scroll indicator tap: up
+  if (getScroll() > 0 && cy >= startY - rowH && cy < startY) {
+    setScroll(Math.max(0, getScroll() - 1));
+    return;
+  }
+  // Scroll indicator tap: down
+  if (getScroll() < maxScroll && cy > startY + visibleH && cy <= startY + visibleH + rowH) {
+    setScroll(Math.min(maxScroll, getScroll() + 1));
+    return;
+  }
+
+  for (let i = 0; i < itemCount; i++) {
+    const visIndex = i - getScroll();
+    if (visIndex < 0 || visIndex >= SETTINGS_VISIBLE_ROWS) continue;
+
+    const y = startY + visIndex * (rowH + rowGap);
+    const itemName = getItemName(i);
+
+    // Bottom button (back/start)
+    if (itemName === 'back' || itemName === 'start') {
+      const bw = 120;
+      const bx = CANVAS_WIDTH / 2 - bw / 2;
+      if (cx >= bx && cx <= bx + bw && cy >= y && cy <= y + rowH) {
+        setIndex(i);
+        onBottomButton();
+        return;
+      }
+      continue;
+    }
+
+    if (cy >= y && cy <= y + rowH) {
+      setIndex(i);
+      const leftArrowX = rowX + rowW - 200;
+      const rightArrowX = rowX + rowW - arrowW - 4;
+      const arrowCenterY = y + rowH / 2;
+
+      // Left arrow hit
+      const leftHitX = leftArrowX - (hitSize - arrowW) / 2;
+      if (cx >= leftHitX && cx <= leftHitX + hitSize &&
+          cy >= arrowCenterY - hitSize / 2 && cy <= arrowCenterY + hitSize / 2) {
+        onKey('ArrowLeft');
+        return;
+      }
+      // Right arrow hit
+      const rightHitX = rightArrowX - (hitSize - arrowW) / 2;
+      if (cx >= rightHitX && cx <= rightHitX + hitSize &&
+          cy >= arrowCenterY - hitSize / 2 && cy <= arrowCenterY + hitSize / 2) {
+        onKey('ArrowRight');
+        return;
+      }
+
+      // Custom gravity tap
+      if (itemName === 'customGravity') {
+        const gravInput = document.getElementById('custom-gravity-input');
+        if (gravInput) {
+          gravInput.value = game.customGravityInput;
+          gravInput.focus();
+          gravInput.oninput = () => {
+            game.customGravityInput = gravInput.value;
+            const parsed = parseFloat(gravInput.value);
+            if (!isNaN(parsed) && parsed >= 0.1) {
+              settings.customGravity = parsed;
+            }
+          };
+          gravInput.onblur = () => {
+            const parsed = parseFloat(gravInput.value);
+            if (!isNaN(parsed) && parsed >= 0.1) {
+              settings.customGravity = parsed;
+            }
+            game.customGravityInput = String(settings.customGravity);
+            saveSettings(settings);
+            gravInput.oninput = null;
+            gravInput.onblur = null;
+          };
+        }
+        return;
+      }
+      break;
+    }
+  }
+}
+```
+
+- [ ] **Step 2: Refactor settings click handler to use `handleMenuClick()`**
+
+Replace the entire `else if (game.state === STATE.SETTINGS) { ... }` block in `handleClick()` with:
+
+```js
+  else if (game.state === STATE.SETTINGS) {
+    handleMenuClick(cx, cy, {
+      getItemCount: getSettingsItemCount,
+      getItemName: getSettingsItemName,
+      getIndex: () => game.settingsIndex,
+      setIndex: (i) => { game.settingsIndex = i; },
+      getScroll: () => game.settingsScrollOffset,
+      setScroll: (v) => { game.settingsScrollOffset = v; },
+      onBottomButton: () => handleSettingsKey('Enter'),
+      onKey: handleSettingsKey,
+    });
+  }
+```
+
+- [ ] **Step 3: Verify settings touch/click still works**
+
+Run: Open browser, test all settings interactions via click/touch — scroll indicators, arrow buttons, custom gravity input focus, Back button. Verify no regressions.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add animal-wars/js/main.js
+git commit -m "refactor: extract handleMenuClick shared click handler"
+```
+
+---
+
+### Task 8: New Game Screen — State Handlers (Key, Click, Render)
 
 Wire up the `STATE.NEW_GAME` state with input handling, click handling, and rendering.
 
@@ -1020,7 +1192,7 @@ function handleNewGameKey(key) {
 
 - [ ] **Step 3: Add New Game state variables to the game object**
 
-In the `game` object (around line 80-85), add:
+In the `game` object in `animal-wars/js/main.js`, add alongside the existing settings state variables:
 
 ```js
   newGameIndex: 0,
@@ -1074,103 +1246,22 @@ In the `render()` function, add a case after `STATE.TITLE_SCREEN`:
       break;
 ```
 
-- [ ] **Step 7: Add `STATE.NEW_GAME` to `handleClick()` for touch/click support**
+- [ ] **Step 7: Add `STATE.NEW_GAME` to `handleClick()` using shared `handleMenuClick()`**
 
-In `handleClick()`, add a new `else if` branch for `STATE.NEW_GAME` right after the `STATE.SETTINGS` branch. This reuses the same row hit-testing pattern:
+In `handleClick()`, add a new `else if` branch for `STATE.NEW_GAME` right after the `STATE.SETTINGS` branch. This uses the shared `handleMenuClick()` extracted in Task 7:
 
 ```js
   else if (game.state === STATE.NEW_GAME) {
-    const rowH = SETTINGS_ROW_H;
-    const rowGap = SETTINGS_ROW_GAP;
-    const startY = 68;
-    const rowW = 340;
-    const rowX = CANVAS_WIDTH / 2 - rowW / 2;
-    const arrowW = SETTINGS_ARROW_W;
-    const hitSize = SETTINGS_ARROW_HIT;
-    const itemCount = getNewGameItemCount();
-    const visibleH = SETTINGS_VISIBLE_ROWS * rowH + (SETTINGS_VISIBLE_ROWS - 1) * rowGap;
-    const maxScroll = Math.max(0, itemCount + SETTINGS_SCROLL_PADDING - SETTINGS_VISIBLE_ROWS);
-
-    // Scroll indicator tap: up
-    if (game.newGameScrollOffset > 0 && cy >= startY - rowH && cy < startY) {
-      game.newGameScrollOffset = Math.max(0, game.newGameScrollOffset - 1);
-      return;
-    }
-    // Scroll indicator tap: down
-    if (game.newGameScrollOffset < maxScroll && cy > startY + visibleH && cy <= startY + visibleH + rowH) {
-      game.newGameScrollOffset = Math.min(maxScroll, game.newGameScrollOffset + 1);
-      return;
-    }
-
-    for (let i = 0; i < itemCount; i++) {
-      const visIndex = i - game.newGameScrollOffset;
-      if (visIndex < 0 || visIndex >= SETTINGS_VISIBLE_ROWS) continue;
-
-      const y = startY + visIndex * (rowH + rowGap);
-      const itemName = getNewGameItemName(i);
-
-      if (itemName === 'start') {
-        const bw = 120;
-        const bx = CANVAS_WIDTH / 2 - bw / 2;
-        if (cx >= bx && cx <= bx + bw && cy >= y && cy <= y + rowH) {
-          game.newGameIndex = i;
-          saveSettings(settings);
-          startNewGame();
-          return;
-        }
-        continue;
-      }
-
-      if (cy >= y && cy <= y + rowH) {
-        game.newGameIndex = i;
-        const leftArrowX = rowX + rowW - 200;
-        const rightArrowX = rowX + rowW - arrowW - 4;
-        const arrowCenterY = y + rowH / 2;
-
-        // Left arrow hit
-        const leftHitX = leftArrowX - (hitSize - arrowW) / 2;
-        if (cx >= leftHitX && cx <= leftHitX + hitSize &&
-            cy >= arrowCenterY - hitSize / 2 && cy <= arrowCenterY + hitSize / 2) {
-          handleNewGameKey('ArrowLeft');
-          return;
-        }
-        // Right arrow hit
-        const rightHitX = rightArrowX - (hitSize - arrowW) / 2;
-        if (cx >= rightHitX && cx <= rightHitX + hitSize &&
-            cy >= arrowCenterY - hitSize / 2 && cy <= arrowCenterY + hitSize / 2) {
-          handleNewGameKey('ArrowRight');
-          return;
-        }
-
-        // Custom gravity tap
-        if (itemName === 'customGravity') {
-          const gravInput = document.getElementById('custom-gravity-input');
-          if (gravInput) {
-            gravInput.value = game.customGravityInput;
-            gravInput.focus();
-            gravInput.oninput = () => {
-              game.customGravityInput = gravInput.value;
-              const parsed = parseFloat(gravInput.value);
-              if (!isNaN(parsed) && parsed >= 0.1) {
-                settings.customGravity = parsed;
-              }
-            };
-            gravInput.onblur = () => {
-              const parsed = parseFloat(gravInput.value);
-              if (!isNaN(parsed) && parsed >= 0.1) {
-                settings.customGravity = parsed;
-              }
-              game.customGravityInput = String(settings.customGravity);
-              saveSettings(settings);
-              gravInput.oninput = null;
-              gravInput.onblur = null;
-            };
-          }
-          return;
-        }
-        break;
-      }
-    }
+    handleMenuClick(cx, cy, {
+      getItemCount: getNewGameItemCount,
+      getItemName: getNewGameItemName,
+      getIndex: () => game.newGameIndex,
+      setIndex: (i) => { game.newGameIndex = i; },
+      getScroll: () => game.newGameScrollOffset,
+      setScroll: (v) => { game.newGameScrollOffset = v; },
+      onBottomButton: () => { saveSettings(settings); startNewGame(); },
+      onKey: handleNewGameKey,
+    });
   }
 ```
 
@@ -1196,7 +1287,7 @@ git commit -m "feat: add New Game setup screen with per-player character selecti
 
 ---
 
-### Task 8: Final Verification & Cleanup
+### Task 9: Final Verification & Cleanup
 
 Verify everything works end-to-end and all tests pass.
 
