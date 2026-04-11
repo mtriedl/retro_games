@@ -12,7 +12,8 @@ export const DEFAULT_SETTINGS = {
   aimPreview: false,
   dynamicAimPreview: false,
   projectile: 'Banana',
-  character: 'Gorilla',
+  p1Character: 'Gorilla',
+  p2Character: 'Gorilla',
   volume: 0.5,
 };
 
@@ -24,6 +25,12 @@ export function loadSettings() {
     if (stored) {
       Object.assign(base, stored);
     }
+    // Migrate legacy single-character setting (guard each field independently)
+    if (stored && stored.character) {
+      if (!stored.p1Character) base.p1Character = stored.character;
+      if (!stored.p2Character) base.p2Character = stored.character;
+    }
+    delete base.character;
     // Auto-detect input method if no stored preference
     if (!stored || !stored.hasOwnProperty('inputMethod')) {
       base.inputMethod = ('ontouchstart' in globalThis) ? 'sliders' : 'classic';

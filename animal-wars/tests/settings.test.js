@@ -27,8 +27,46 @@ describe('settings', () => {
     assert.equal(DEFAULT_SETTINGS.volume, 0.5);
   });
 
-  it('DEFAULT_SETTINGS includes character as Gorilla', () => {
-    assert.equal(DEFAULT_SETTINGS.character, 'Gorilla');
+  it('DEFAULT_SETTINGS includes p1Character and p2Character as Gorilla', () => {
+    assert.equal(DEFAULT_SETTINGS.p1Character, 'Gorilla');
+    assert.equal(DEFAULT_SETTINGS.p2Character, 'Gorilla');
+    assert.equal(DEFAULT_SETTINGS.character, undefined);
+  });
+
+  it('defaults include p1Character and p2Character as Gorilla', () => {
+    const settings = loadSettings();
+    assert.equal(settings.p1Character, 'Gorilla');
+    assert.equal(settings.p2Character, 'Gorilla');
+    assert.equal(settings.character, undefined);
+  });
+
+  it('migrates legacy character to p1Character and p2Character', () => {
+    localStorage.setItem('animal-wars-settings', JSON.stringify({ character: 'Robot' }));
+    const settings = loadSettings();
+    assert.equal(settings.p1Character, 'Robot');
+    assert.equal(settings.p2Character, 'Robot');
+    assert.equal(settings.character, undefined);
+  });
+
+  it('does not overwrite existing p1Character/p2Character during migration', () => {
+    localStorage.setItem('animal-wars-settings', JSON.stringify({
+      character: 'Robot',
+      p1Character: 'Alien',
+      p2Character: 'Penguin',
+    }));
+    const settings = loadSettings();
+    assert.equal(settings.p1Character, 'Alien');
+    assert.equal(settings.p2Character, 'Penguin');
+  });
+
+  it('migrates legacy character to only the missing per-player field', () => {
+    localStorage.setItem('animal-wars-settings', JSON.stringify({
+      character: 'Robot',
+      p2Character: 'Penguin',
+    }));
+    const settings = loadSettings();
+    assert.equal(settings.p1Character, 'Robot');
+    assert.equal(settings.p2Character, 'Penguin');
   });
 
   it('loadSettings returns defaults when localStorage is empty', () => {
