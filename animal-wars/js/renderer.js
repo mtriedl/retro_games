@@ -25,6 +25,154 @@ export function createRenderer(ctx) {
   const sunMoonX = CANVAS_WIDTH / 2;
   const sunRadius = 18;
 
+  function drawMenuRows(items, title, selectedIndex, scrollOffset) {
+    ctx.fillStyle = SKY_NIGHT_COLOR;
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '20px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(title, CANVAS_WIDTH / 2, 40);
+
+    const rowH = SETTINGS_ROW_H;
+    const rowGap = SETTINGS_ROW_GAP;
+    const startY = 68;
+    const rowW = 340;
+    const rowX = CANVAS_WIDTH / 2 - rowW / 2;
+    const arrowW = SETTINGS_ARROW_W;
+
+    const totalItems = items.length;
+    const visibleH = SETTINGS_VISIBLE_ROWS * rowH + (SETTINGS_VISIBLE_ROWS - 1) * rowGap;
+
+    // Scroll indicators
+    const hasAbove = scrollOffset > 0;
+    const maxScroll = Math.max(0, totalItems + SETTINGS_SCROLL_PADDING - SETTINGS_VISIBLE_ROWS);
+    const hasBelow = scrollOffset < maxScroll;
+
+    if (hasAbove) {
+      ctx.fillStyle = '#888888';
+      ctx.font = '11px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('\u25B2', CANVAS_WIDTH / 2, startY - 6);
+    }
+    if (hasBelow) {
+      ctx.fillStyle = '#888888';
+      ctx.font = '11px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('\u25BC', CANVAS_WIDTH / 2, startY + visibleH + 14);
+    }
+
+    // Clip to visible area
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, startY, CANVAS_WIDTH, visibleH);
+    ctx.clip();
+
+    ctx.font = '11px monospace';
+    ctx.textBaseline = 'middle';
+
+    for (let i = 0; i < totalItems; i++) {
+      const visIndex = i - scrollOffset;
+      if (visIndex < 0 || visIndex >= SETTINGS_VISIBLE_ROWS) continue;
+
+      const item = items[i];
+      const y = startY + visIndex * (rowH + rowGap);
+      const midY = y + rowH / 2;
+      const selected = i === selectedIndex;
+
+      if (item.isBack) {
+        const bw = 120;
+        const bx = CANVAS_WIDTH / 2 - bw / 2;
+        ctx.fillStyle = selected ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.05)';
+        ctx.fillRect(bx, y, bw, rowH);
+        ctx.strokeStyle = selected ? '#FFD700' : '#555555';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bx, y, bw, rowH);
+        ctx.fillStyle = selected ? '#FFFFFF' : '#888888';
+        ctx.textAlign = 'center';
+        ctx.fillText(item.backLabel || 'Back', CANVAS_WIDTH / 2, midY);
+        continue;
+      }
+
+      // Row background
+      ctx.fillStyle = selected ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)';
+      ctx.fillRect(rowX, y, rowW, rowH);
+
+      // Arrow button positions
+      const leftArrowX = rowX + rowW - 200;
+      const rightArrowX = rowX + rowW - arrowW - 4;
+      const arrowY = y + (rowH - (arrowW - 4)) / 2;
+      const arrowH = arrowW - 4;
+
+      // Value center
+      const valueCenterX = (leftArrowX + arrowW + rightArrowX) / 2;
+
+      // Label
+      ctx.fillStyle = selected ? '#FFD700' : '#888888';
+      ctx.textAlign = 'left';
+      ctx.fillText(item.label, rowX + 8, midY);
+
+      // Value area
+      if (item.volume !== undefined && item.volume !== null) {
+        const barW = 80;
+        const barH = 6;
+        const barX = valueCenterX - barW / 2;
+        const barY = y + (rowH - barH) / 2;
+        ctx.fillStyle = '#333333';
+        ctx.fillRect(barX, barY, barW, barH);
+        ctx.fillStyle = '#55FF55';
+        ctx.fillRect(barX, barY, barW * item.volume, barH);
+        ctx.fillStyle = '#AAAAAA';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${Math.round(item.volume * 100)}%`, rowX + rowW - 8, midY);
+      } else if (item.value !== null) {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'center';
+        ctx.fillText(item.value, valueCenterX, midY);
+      }
+
+      // Draw arrow buttons
+      if (item.cycle) {
+        ctx.fillStyle = '#444444';
+        ctx.fillRect(leftArrowX, arrowY, arrowW, arrowH);
+        ctx.fillStyle = '#FFD700';
+        ctx.textAlign = 'center';
+        ctx.fillText('<', leftArrowX + arrowW / 2, midY);
+
+        ctx.fillStyle = '#444444';
+        ctx.fillRect(rightArrowX, arrowY, arrowW, arrowH);
+        ctx.fillStyle = '#FFD700';
+        ctx.textAlign = 'center';
+        ctx.fillText('>', rightArrowX + arrowW / 2, midY);
+      }
+
+      // Sprite preview
+      if (item.preview || item.hasPreview) {
+        const previewSize = CHARACTER_PREVIEW_SIZE;
+        const previewX = rightArrowX + arrowW + 8;
+        const previewY = y + (rowH - previewSize) / 2;
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+        ctx.fillRect(previewX - 1, previewY - 1, previewSize + 2, previewSize + 2);
+
+        if (item.preview) {
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(item.preview, previewX, previewY, previewSize, previewSize);
+          ctx.imageSmoothingEnabled = true;
+        } else {
+          ctx.fillStyle = '#555555';
+          ctx.font = '16px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('?', previewX + previewSize / 2, previewY + previewSize / 2 + 1);
+          ctx.font = '11px monospace';
+        }
+      }
+    }
+
+    ctx.restore();
+    ctx.textBaseline = 'alphabetic';
+  }
+
   return {
     /** Get celestial body bounds for collision checking */
     getCelestialBounds() {
@@ -593,14 +741,6 @@ export function createRenderer(ctx) {
     },
 
     drawSettingsMenu(settings, selectedIndex, editingCustom, customValue, scrollOffset = 0, p1CharacterPreview = null, p2CharacterPreview = null, projectileSprite = null) {
-      ctx.fillStyle = SKY_NIGHT_COLOR;
-      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '20px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('SETTINGS', CANVAS_WIDTH / 2, 40);
-
       const items = [
         { label: 'Input', value: settings.inputMethod === 'sliders' ? 'Sliders' : 'Classic', cycle: true },
         { label: 'Rounds', value: String(settings.rounds), cycle: true },
@@ -616,147 +756,21 @@ export function createRenderer(ctx) {
         { label: 'Volume', value: null, volume: settings.volume, cycle: true },
         { label: 'Back', value: null, cycle: false, isBack: true },
       ];
+      drawMenuRows(items, 'SETTINGS', selectedIndex, scrollOffset);
+    },
 
-      const rowH = SETTINGS_ROW_H;
-      const rowGap = SETTINGS_ROW_GAP;
-      const startY = 68;
-      const rowW = 340;
-      const rowX = CANVAS_WIDTH / 2 - rowW / 2;
-      const arrowW = SETTINGS_ARROW_W;
-
-      const totalItems = items.length;
-      const visibleH = SETTINGS_VISIBLE_ROWS * rowH + (SETTINGS_VISIBLE_ROWS - 1) * rowGap;
-
-      // Scroll indicators
-      const hasAbove = scrollOffset > 0;
-      const maxScroll = Math.max(0, totalItems + SETTINGS_SCROLL_PADDING - SETTINGS_VISIBLE_ROWS);
-      const hasBelow = scrollOffset < maxScroll;
-
-      if (hasAbove) {
-        ctx.fillStyle = '#888888';
-        ctx.font = '11px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('\u25B2', CANVAS_WIDTH / 2, startY - 6);
-      }
-      if (hasBelow) {
-        ctx.fillStyle = '#888888';
-        ctx.font = '11px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('\u25BC', CANVAS_WIDTH / 2, startY + visibleH + 14);
-      }
-
-      // Clip to visible area
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(0, startY, CANVAS_WIDTH, visibleH);
-      ctx.clip();
-
-      ctx.font = '11px monospace';
-      ctx.textBaseline = 'middle';
-
-      for (let i = 0; i < totalItems; i++) {
-        const visIndex = i - scrollOffset;
-        if (visIndex < 0 || visIndex >= SETTINGS_VISIBLE_ROWS) continue;
-
-        const item = items[i];
-        const y = startY + visIndex * (rowH + rowGap);
-        const midY = y + rowH / 2;
-        const selected = i === selectedIndex;
-
-        if (item.isBack) {
-          const bw = 120;
-          const bx = CANVAS_WIDTH / 2 - bw / 2;
-          ctx.fillStyle = selected ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.05)';
-          ctx.fillRect(bx, y, bw, rowH);
-          ctx.strokeStyle = selected ? '#FFD700' : '#555555';
-          ctx.lineWidth = 1;
-          ctx.strokeRect(bx, y, bw, rowH);
-          ctx.fillStyle = selected ? '#FFFFFF' : '#888888';
-          ctx.textAlign = 'center';
-          ctx.fillText('Back', CANVAS_WIDTH / 2, midY);
-          continue;
-        }
-
-        // Row background
-        ctx.fillStyle = selected ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)';
-        ctx.fillRect(rowX, y, rowW, rowH);
-
-        // Arrow button positions
-        const leftArrowX = rowX + rowW - 200;
-        const rightArrowX = rowX + rowW - arrowW - 4;
-        const arrowY = y + (rowH - (arrowW - 4)) / 2;
-        const arrowH = arrowW - 4;
-
-        // Value center: midpoint between left arrow right edge and right arrow left edge
-        const valueCenterX = (leftArrowX + arrowW + rightArrowX) / 2;
-
-        // Label
-        ctx.fillStyle = selected ? '#FFD700' : '#888888';
-        ctx.textAlign = 'left';
-        ctx.fillText(item.label, rowX + 8, midY);
-
-        // Value area
-        if (item.volume !== undefined && item.volume !== null) {
-          // Volume bar
-          const barW = 80;
-          const barH = 6;
-          const barX = valueCenterX - barW / 2;
-          const barY = y + (rowH - barH) / 2;
-          ctx.fillStyle = '#333333';
-          ctx.fillRect(barX, barY, barW, barH);
-          ctx.fillStyle = '#55FF55';
-          ctx.fillRect(barX, barY, barW * item.volume, barH);
-          ctx.fillStyle = '#AAAAAA';
-          ctx.textAlign = 'right';
-          ctx.fillText(`${Math.round(item.volume * 100)}%`, rowX + rowW - 8, midY);
-        } else if (item.value !== null) {
-          ctx.fillStyle = '#FFFFFF';
-          ctx.textAlign = 'center';
-          ctx.fillText(item.value, valueCenterX, midY);
-        }
-
-        // Draw arrow buttons
-        if (item.cycle) {
-          ctx.fillStyle = '#444444';
-          ctx.fillRect(leftArrowX, arrowY, arrowW, arrowH);
-          ctx.fillStyle = '#FFD700';
-          ctx.textAlign = 'center';
-          ctx.fillText('<', leftArrowX + arrowW / 2, midY);
-
-          ctx.fillStyle = '#444444';
-          ctx.fillRect(rightArrowX, arrowY, arrowW, arrowH);
-          ctx.fillStyle = '#FFD700';
-          ctx.textAlign = 'center';
-          ctx.fillText('>', rightArrowX + arrowW / 2, midY);
-        }
-
-        // Sprite preview (Character / Projectile rows)
-        if (item.preview || item.hasPreview) {
-          const previewSize = CHARACTER_PREVIEW_SIZE;
-          const previewX = rightArrowX + arrowW + 8;
-          const previewY = y + (rowH - previewSize) / 2;
-
-          // Subtle background frame
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
-          ctx.fillRect(previewX - 1, previewY - 1, previewSize + 2, previewSize + 2);
-
-          if (item.preview) {
-            ctx.imageSmoothingEnabled = false;
-            ctx.drawImage(item.preview, previewX, previewY, previewSize, previewSize);
-            ctx.imageSmoothingEnabled = true;
-          } else {
-            // Missing sprite placeholder
-            ctx.fillStyle = '#555555';
-            ctx.font = '16px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('?', previewX + previewSize / 2, previewY + previewSize / 2 + 1);
-            ctx.font = '11px monospace';
-          }
-        }
-      }
-
-      ctx.restore(); // End clip
-      ctx.textBaseline = 'alphabetic';
+    drawNewGameMenu(settings, selectedIndex, editingCustom, customValue, scrollOffset = 0, p1CharacterPreview = null, p2CharacterPreview = null, projectileSprite = null) {
+      const items = [
+        { label: 'Rounds', value: String(settings.rounds), cycle: true },
+        { label: 'Gravity', value: `${settings.gravityPreset} (${settings.gravityPreset === 'Custom' ? settings.customGravity : (GRAVITY_PRESETS.find(p => p.name === settings.gravityPreset)?.gravity ?? '')})`, cycle: true },
+        ...(settings.gravityPreset === 'Custom' ? [{ label: 'Custom G', value: editingCustom ? customValue + '_' : String(settings.customGravity), cycle: false }] : []),
+        { label: 'P1 Char', value: settings.p1Character, cycle: true, preview: p1CharacterPreview, hasPreview: true },
+        { label: 'Player 2', value: settings.player2Mode, cycle: true },
+        ...(settings.player2Mode === 'human' ? [{ label: 'P2 Char', value: settings.p2Character, cycle: true, preview: p2CharacterPreview, hasPreview: true }] : []),
+        { label: 'Projectile', value: settings.projectile, cycle: true, preview: projectileSprite, hasPreview: true },
+        { label: 'Start', value: null, cycle: false, isBack: true, backLabel: 'Start' },
+      ];
+      drawMenuRows(items, 'NEW GAME', selectedIndex, scrollOffset);
     },
 
     drawRoundEnd(winner, scores) {
