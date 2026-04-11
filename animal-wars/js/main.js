@@ -82,6 +82,8 @@ const game = {
   settingsIndex: 0,
   settingsFrom: null,
   settingsScrollOffset: 0,
+  newGameIndex: 0,
+  newGameScrollOffset: 0,
   p1CharacterPreviewSprite: null,
   p2CharacterPreviewSprite: null,
   customGravityInput: '',
@@ -391,6 +393,10 @@ function handleKey(key) {
       handleMenuKey(key, ['new_game', 'settings', 'fullscreen'], game, 'menuIndex', handleTitleAction);
       break;
 
+    case STATE.NEW_GAME:
+      handleNewGameKey(key);
+      break;
+
     case STATE.PLAYER_INPUT:
       if (key === 'Escape') { enterPause(); break; }
       if (isAITurn()) break;
@@ -437,7 +443,13 @@ function handleMenuKey(key, items, stateObj, indexKey, actionFn) {
 function handleTitleAction(action) {
   switch (action) {
     case 'new_game':
-      startNewGame();
+      game.newGameIndex = 0;
+      game.newGameScrollOffset = 0;
+      game.customGravityInput = String(settings.customGravity);
+      game.state = STATE.NEW_GAME;
+      loadCharacterPreview(settings.p1Character).then(img => { game.p1CharacterPreviewSprite = img; });
+      loadCharacterPreview(settings.p2Character).then(img => { game.p2CharacterPreviewSprite = img; });
+      loadProjectileSprite(settings.projectile).then(img => { projectileSprite = img; });
       break;
     case 'settings':
       game.settingsFrom = 'title';
@@ -523,6 +535,40 @@ function clampSettingsScroll() {
     game.settingsScrollOffset = game.settingsIndex - SETTINGS_VISIBLE_ROWS + 1;
   }
   game.settingsScrollOffset = Math.max(0, Math.min(game.settingsScrollOffset, maxScroll));
+}
+
+function getNewGameItemCount() {
+  let count = 6; // base items (without conditionals)
+  if (settings.gravityPreset === 'Custom') count++;
+  if (settings.player2Mode === 'human') count++;
+  return count;
+}
+
+function getNewGameItemName(index) {
+  const isCustom = settings.gravityPreset === 'Custom';
+  const isHuman = settings.player2Mode === 'human';
+  const items = [
+    'rounds',
+    'gravityPreset',
+    ...(isCustom ? ['customGravity'] : []),
+    'p1Character',
+    'player2Mode',
+    ...(isHuman ? ['p2Character'] : []),
+    'projectile',
+    'start',
+  ];
+  return items[index] || null;
+}
+
+function clampNewGameScroll() {
+  const itemCount = getNewGameItemCount();
+  const maxScroll = Math.max(0, itemCount + SETTINGS_SCROLL_PADDING - SETTINGS_VISIBLE_ROWS);
+  if (game.newGameIndex < game.newGameScrollOffset) {
+    game.newGameScrollOffset = game.newGameIndex;
+  } else if (game.newGameIndex >= game.newGameScrollOffset + SETTINGS_VISIBLE_ROWS) {
+    game.newGameScrollOffset = game.newGameIndex - SETTINGS_VISIBLE_ROWS + 1;
+  }
+  game.newGameScrollOffset = Math.max(0, Math.min(game.newGameScrollOffset, maxScroll));
 }
 
 function handleMenuClick(cx, cy, opts) {
@@ -774,6 +820,76 @@ function handleSettingsKey(key) {
   }
 }
 
+function handleNewGameKey(key) {
+  const itemCount = getNewGameItemCount();
+  const itemName = getNewGameItemName(game.newGameIndex);
+
+  if (key === 'ArrowUp') {
+    game.newGameIndex = (game.newGameIndex - 1 + itemCount) % itemCount;
+    clampNewGameScroll();
+    audio.playMenuSelect();
+    return;
+  }
+  if (key === 'ArrowDown') {
+    game.newGameIndex = (game.newGameIndex + 1) % itemCount;
+    clampNewGameScroll();
+    audio.playMenuSelect();
+    return;
+  }
+
+  // Enter on Start
+  if (key === 'Enter' && itemName === 'start') {
+    saveSettings(settings);
+    startNewGame();
+    return;
+  }
+
+  // Escape — back to title
+  if (key === 'Escape') {
+    game.state = STATE.TITLE_SCREEN;
+    game.menuIndex = 0;
+    return;
+  }
+
+  // Custom gravity text input
+  if (itemName === 'customGravity') {
+    if (key >= '0' && key <= '9' || key === '.') {
+      let candidate = game.customGravityInput + key;
+      if (key === '.' && game.customGravityInput.includes('.')) return;
+      const dotIndex = candidate.indexOf('.');
+      if (dotIndex >= 0 && candidate.length - dotIndex - 1 > 2) return;
+      game.customGravityInput = candidate;
+      const parsed = parseFloat(game.customGravityInput);
+      if (!isNaN(parsed) && parsed >= 0.1) {
+        settings.customGravity = parsed;
+        saveSettings(settings);
+      }
+      return;
+    }
+    if (key === 'Backspace') {
+      game.customGravityInput = game.customGravityInput.slice(0, -1);
+      const parsed = parseFloat(game.customGravityInput);
+      if (!isNaN(parsed) && parsed >= 0.1) {
+        settings.customGravity = parsed;
+        saveSettings(settings);
+      }
+      return;
+    }
+  }
+
+  // Left/Right cycling
+  if (key !== 'ArrowLeft' && key !== 'ArrowRight') return;
+  const dir = key === 'ArrowRight' ? 1 : -1;
+
+  if (cycleSettingItem(itemName, dir)) {
+    const newCount = getNewGameItemCount();
+    if (game.newGameIndex >= newCount) {
+      game.newGameIndex = newCount - 1;
+    }
+    clampNewGameScroll();
+  }
+}
+
 function handlePlayerInputKey(key) {
   const result = input.processInputKey(key);
   if (key >= '0' && key <= '9') audio.playKeystroke();
@@ -895,6 +1011,17 @@ function handleClick(e) {
       setScroll: (v) => { game.settingsScrollOffset = v; },
       onBottomButton: () => handleSettingsKey('Enter'),
       onKey: handleSettingsKey,
+    });
+  } else if (game.state === STATE.NEW_GAME) {
+    handleMenuClick(cx, cy, {
+      getItemCount: getNewGameItemCount,
+      getItemName: getNewGameItemName,
+      getIndex: () => game.newGameIndex,
+      setIndex: (i) => { game.newGameIndex = i; },
+      getScroll: () => game.newGameScrollOffset,
+      setScroll: (v) => { game.newGameScrollOffset = v; },
+      onBottomButton: () => { saveSettings(settings); startNewGame(); },
+      onKey: handleNewGameKey,
     });
   }
 
@@ -1208,6 +1335,13 @@ function render(alpha) {
   switch (game.state) {
     case STATE.TITLE_SCREEN:
       renderer.drawTitleScreen(game.menuIndex);
+      break;
+
+    case STATE.NEW_GAME:
+      renderer.drawNewGameMenu(settings, game.newGameIndex,
+        settings.gravityPreset === 'Custom', game.customGravityInput,
+        game.newGameScrollOffset,
+        game.p1CharacterPreviewSprite, game.p2CharacterPreviewSprite, projectileSprite);
       break;
 
     case STATE.ROUND_START:
