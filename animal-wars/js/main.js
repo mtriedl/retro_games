@@ -43,7 +43,8 @@ ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 const renderer = createRenderer(ctx);
 const input = createInputHandler();
 const audio = createAudioEngine();
-let spriteFrames = [];
+let p1SpriteFrames = [];
+let p2SpriteFrames = [];
 let settings = loadSettings();
 let projectileSprite = null;
 
@@ -104,7 +105,10 @@ const game = {
 
 // --- Init ---
 async function init() {
-  spriteFrames = await createCharacterSprites(settings.character);
+  [p1SpriteFrames, p2SpriteFrames] = await Promise.all([
+    createCharacterSprites(settings.p1Character),
+    createCharacterSprites(settings.p2Character),
+  ]);
   input.attach(canvas);
 
   // Unlock audio on first interaction
@@ -1048,7 +1052,8 @@ function updateSliderFromX(x, slider, which) {
 }
 
 // --- Game flow ---
-function startNewGame() {
+async function startNewGame() {
+  game.state = STATE.ROUND_START; // block input during async sprite load
   settings = loadSettings();
   game.totalRounds = settings.rounds;
   game.round = 0;
@@ -1056,6 +1061,13 @@ function startNewGame() {
   game.startingPlayer = 0;
   game.activePlayer = 0;
   audio.setVolume(settings.volume);
+  const p2Char = settings.player2Mode !== 'human'
+    ? CHARACTER_OPTIONS[Math.floor(Math.random() * CHARACTER_OPTIONS.length)]
+    : settings.p2Character;
+  [p1SpriteFrames, p2SpriteFrames] = await Promise.all([
+    createCharacterSprites(settings.p1Character),
+    createCharacterSprites(p2Char),
+  ]);
   startRound();
 }
 
@@ -1213,7 +1225,8 @@ function drawGameScene(alpha) {
   renderer.drawBuildingsFromHeightmap(game.buildings, game.heightmap);
 
   for (let i = 0; i < 2; i++) {
-    renderer.drawGorilla(game.gorillas[i], spriteFrames, game.gorillas[i].frame);
+    const frames = i === 0 ? p1SpriteFrames : p2SpriteFrames;
+    renderer.drawGorilla(game.gorillas[i], frames, game.gorillas[i].frame);
   }
 
   // Shot trail — live during flight, fading previous after
