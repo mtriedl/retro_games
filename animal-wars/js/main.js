@@ -525,6 +525,73 @@ function clampSettingsScroll() {
   game.settingsScrollOffset = Math.max(0, Math.min(game.settingsScrollOffset, maxScroll));
 }
 
+function cycleSettingItem(itemName, dir) {
+  const len = CHARACTER_OPTIONS.length;
+  switch (itemName) {
+    case 'inputMethod': {
+      const options = ['classic', 'sliders'];
+      const idx = options.indexOf(settings.inputMethod);
+      settings.inputMethod = options[(idx + dir + options.length) % options.length];
+      break;
+    }
+    case 'rounds': {
+      const options = [1, 3, 5, 10];
+      const idx = options.indexOf(settings.rounds);
+      settings.rounds = options[(idx + dir + options.length) % options.length];
+      break;
+    }
+    case 'gravityPreset': {
+      const presetNames = GRAVITY_PRESETS.map(p => p.name).concat('Custom');
+      const idx = presetNames.indexOf(settings.gravityPreset);
+      settings.gravityPreset = presetNames[(idx + dir + presetNames.length) % presetNames.length];
+      game.customGravityInput = String(settings.customGravity);
+      break;
+    }
+    case 'player2Mode': {
+      const options = ['human', 'ai_easy', 'ai_medium', 'ai_hard'];
+      const idx = options.indexOf(settings.player2Mode);
+      settings.player2Mode = options[(idx + dir + options.length) % options.length];
+      break;
+    }
+    case 'p1Character': {
+      const idx = CHARACTER_OPTIONS.indexOf(settings.p1Character);
+      settings.p1Character = CHARACTER_OPTIONS[(idx + dir + len) % len];
+      loadCharacterPreview(settings.p1Character).then(img => { game.p1CharacterPreviewSprite = img; });
+      break;
+    }
+    case 'p2Character': {
+      const idx = CHARACTER_OPTIONS.indexOf(settings.p2Character);
+      settings.p2Character = CHARACTER_OPTIONS[(idx + dir + len) % len];
+      loadCharacterPreview(settings.p2Character).then(img => { game.p2CharacterPreviewSprite = img; });
+      break;
+    }
+    case 'shotTrail':
+      settings.shotTrail = !settings.shotTrail;
+      break;
+    case 'aimPreview':
+      settings.aimPreview = !settings.aimPreview;
+      break;
+    case 'dynamicAimPreview':
+      settings.dynamicAimPreview = !settings.dynamicAimPreview;
+      break;
+    case 'projectile': {
+      const idx = PROJECTILE_OPTIONS.indexOf(settings.projectile);
+      settings.projectile = PROJECTILE_OPTIONS[(idx + dir + PROJECTILE_OPTIONS.length) % PROJECTILE_OPTIONS.length];
+      loadProjectileSprite(settings.projectile).then(img => { projectileSprite = img; });
+      break;
+    }
+    case 'volume': {
+      settings.volume = Math.round(Math.min(1, Math.max(0, settings.volume + dir * 0.1)) * 10) / 10;
+      audio.setVolume(settings.volume);
+      break;
+    }
+    default:
+      return false; // item not cycleable
+  }
+  saveSettings(settings);
+  return true;
+}
+
 function handleSettingsKey(key) {
   const itemCount = getSettingsItemCount();
   const itemName = getSettingsItemName(game.settingsIndex);
@@ -598,85 +665,17 @@ function handleSettingsKey(key) {
     }
   }
 
-  // Left/Right cycling
   if (key !== 'ArrowLeft' && key !== 'ArrowRight') return;
   const dir = key === 'ArrowRight' ? 1 : -1;
 
-  switch (itemName) {
-    case 'inputMethod': {
-      const options = ['classic', 'sliders'];
-      const idx = options.indexOf(settings.inputMethod);
-      const newIdx = (idx + dir + options.length) % options.length;
-      settings.inputMethod = options[newIdx];
-      break;
+  if (cycleSettingItem(itemName, dir)) {
+    // Clamp settingsIndex if a conditional row appeared/disappeared
+    const newCount = getSettingsItemCount();
+    if (game.settingsIndex >= newCount) {
+      game.settingsIndex = newCount - 1;
     }
-    case 'rounds': {
-      const options = [1, 3, 5, 10];
-      const idx = options.indexOf(settings.rounds);
-      const newIdx = (idx + dir + options.length) % options.length;
-      settings.rounds = options[newIdx];
-      break;
-    }
-    case 'gravityPreset': {
-      const presetNames = GRAVITY_PRESETS.map(p => p.name).concat('Custom');
-      const idx = presetNames.indexOf(settings.gravityPreset);
-      const newIdx = (idx + dir + presetNames.length) % presetNames.length;
-      settings.gravityPreset = presetNames[newIdx];
-      game.customGravityInput = String(settings.customGravity);
-      // Clamp settingsIndex if Custom row disappeared
-      const newCount = getSettingsItemCount();
-      if (game.settingsIndex >= newCount) {
-        game.settingsIndex = newCount - 1;
-      }
-      clampSettingsScroll();
-      break;
-    }
-    case 'player2Mode': {
-      const options = ['human', 'ai_easy', 'ai_medium', 'ai_hard'];
-      const idx = options.indexOf(settings.player2Mode);
-      const newIdx = (idx + dir + options.length) % options.length;
-      settings.player2Mode = options[newIdx];
-      break;
-    }
-    case 'p1Character': {
-      const idx = CHARACTER_OPTIONS.indexOf(settings.p1Character);
-      const newIdx = (idx + dir + CHARACTER_OPTIONS.length) % CHARACTER_OPTIONS.length;
-      settings.p1Character = CHARACTER_OPTIONS[newIdx];
-      loadCharacterPreview(settings.p1Character).then(img => { game.p1CharacterPreviewSprite = img; });
-      break;
-    }
-    case 'p2Character': {
-      const idx = CHARACTER_OPTIONS.indexOf(settings.p2Character);
-      const newIdx = (idx + dir + CHARACTER_OPTIONS.length) % CHARACTER_OPTIONS.length;
-      settings.p2Character = CHARACTER_OPTIONS[newIdx];
-      loadCharacterPreview(settings.p2Character).then(img => { game.p2CharacterPreviewSprite = img; });
-      break;
-    }
-    case 'shotTrail':
-      settings.shotTrail = !settings.shotTrail;
-      break;
-    case 'aimPreview':
-      settings.aimPreview = !settings.aimPreview;
-      break;
-    case 'dynamicAimPreview':
-      settings.dynamicAimPreview = !settings.dynamicAimPreview;
-      break;
-    case 'projectile': {
-      const idx = PROJECTILE_OPTIONS.indexOf(settings.projectile);
-      const newIdx = (idx + dir + PROJECTILE_OPTIONS.length) % PROJECTILE_OPTIONS.length;
-      settings.projectile = PROJECTILE_OPTIONS[newIdx];
-      loadProjectileSprite(settings.projectile).then(img => { projectileSprite = img; });
-      break;
-    }
-    case 'volume': {
-      settings.volume = Math.round(Math.min(1, Math.max(0, settings.volume + dir * 0.1)) * 10) / 10;
-      audio.setVolume(settings.volume);
-      break;
-    }
-    default:
-      return; // No cycling for back or customGravity
+    clampSettingsScroll();
   }
-  saveSettings(settings);
 }
 
 function handlePlayerInputKey(key) {
