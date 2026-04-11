@@ -525,6 +525,102 @@ function clampSettingsScroll() {
   game.settingsScrollOffset = Math.max(0, Math.min(game.settingsScrollOffset, maxScroll));
 }
 
+function handleMenuClick(cx, cy, opts) {
+  const { getItemCount, getItemName, getIndex, setIndex, getScroll, setScroll, onBottomButton, onKey } = opts;
+  const rowH = SETTINGS_ROW_H;
+  const rowGap = SETTINGS_ROW_GAP;
+  const startY = 68;
+  const rowW = 340;
+  const rowX = CANVAS_WIDTH / 2 - rowW / 2;
+  const arrowW = SETTINGS_ARROW_W;
+  const hitSize = SETTINGS_ARROW_HIT;
+  const itemCount = getItemCount();
+  const visibleH = SETTINGS_VISIBLE_ROWS * rowH + (SETTINGS_VISIBLE_ROWS - 1) * rowGap;
+  const maxScroll = Math.max(0, itemCount + SETTINGS_SCROLL_PADDING - SETTINGS_VISIBLE_ROWS);
+
+  // Scroll indicator tap: up
+  if (getScroll() > 0 && cy >= startY - rowH && cy < startY) {
+    setScroll(Math.max(0, getScroll() - 1));
+    return;
+  }
+  // Scroll indicator tap: down
+  if (getScroll() < maxScroll && cy > startY + visibleH && cy <= startY + visibleH + rowH) {
+    setScroll(Math.min(maxScroll, getScroll() + 1));
+    return;
+  }
+
+  for (let i = 0; i < itemCount; i++) {
+    const visIndex = i - getScroll();
+    if (visIndex < 0 || visIndex >= SETTINGS_VISIBLE_ROWS) continue;
+
+    const y = startY + visIndex * (rowH + rowGap);
+    const itemName = getItemName(i);
+
+    // Bottom button (back/start)
+    if (itemName === 'back' || itemName === 'start') {
+      const bw = 120;
+      const bx = CANVAS_WIDTH / 2 - bw / 2;
+      if (cx >= bx && cx <= bx + bw && cy >= y && cy <= y + rowH) {
+        setIndex(i);
+        onBottomButton();
+        return;
+      }
+      continue;
+    }
+
+    if (cy >= y && cy <= y + rowH) {
+      setIndex(i);
+      const leftArrowX = rowX + rowW - 200;
+      const rightArrowX = rowX + rowW - arrowW - 4;
+      const arrowCenterY = y + rowH / 2;
+
+      // Left arrow hit
+      const leftHitX = leftArrowX - (hitSize - arrowW) / 2;
+      if (cx >= leftHitX && cx <= leftHitX + hitSize &&
+          cy >= arrowCenterY - hitSize / 2 && cy <= arrowCenterY + hitSize / 2) {
+        onKey('ArrowLeft');
+        return;
+      }
+
+      // Right arrow hit
+      const rightHitX = rightArrowX - (hitSize - arrowW) / 2;
+      if (cx >= rightHitX && cx <= rightHitX + hitSize &&
+          cy >= arrowCenterY - hitSize / 2 && cy <= arrowCenterY + hitSize / 2) {
+        onKey('ArrowRight');
+        return;
+      }
+
+      // Custom gravity tap
+      if (itemName === 'customGravity') {
+        const gravInput = document.getElementById('custom-gravity-input');
+        if (gravInput) {
+          gravInput.value = game.customGravityInput;
+          gravInput.focus();
+          gravInput.oninput = () => {
+            game.customGravityInput = gravInput.value;
+            const parsed = parseFloat(gravInput.value);
+            if (!isNaN(parsed) && parsed >= 0.1) {
+              settings.customGravity = parsed;
+            }
+          };
+          gravInput.onblur = () => {
+            const parsed = parseFloat(gravInput.value);
+            if (!isNaN(parsed) && parsed >= 0.1) {
+              settings.customGravity = parsed;
+            }
+            game.customGravityInput = String(settings.customGravity);
+            saveSettings(settings);
+            gravInput.oninput = null;
+            gravInput.onblur = null;
+          };
+        }
+        return;
+      }
+      break;
+    }
+  }
+}
+
 function cycleSettingItem(itemName, dir) {
   const len = CHARACTER_OPTIONS.length;
   switch (itemName) {
@@ -790,97 +886,16 @@ function handleClick(e) {
     game.state = STATE.TITLE_SCREEN;
     game.menuIndex = 0;
   } else if (game.state === STATE.SETTINGS) {
-    const rowH = SETTINGS_ROW_H;
-    const rowGap = SETTINGS_ROW_GAP;
-    const startY = 68;
-    const rowW = 340;
-    const rowX = CANVAS_WIDTH / 2 - rowW / 2;
-    const arrowW = SETTINGS_ARROW_W;
-    const hitSize = SETTINGS_ARROW_HIT;
-    const itemCount = getSettingsItemCount();
-    const visibleH = SETTINGS_VISIBLE_ROWS * rowH + (SETTINGS_VISIBLE_ROWS - 1) * rowGap;
-    const maxScroll = Math.max(0, itemCount + SETTINGS_SCROLL_PADDING - SETTINGS_VISIBLE_ROWS);
-
-    // Scroll indicator tap: up arrow area (full-width bar above menu)
-    if (game.settingsScrollOffset > 0 && cy >= startY - rowH && cy < startY) {
-      game.settingsScrollOffset = Math.max(0, game.settingsScrollOffset - 1);
-      return;
-    }
-    // Scroll indicator tap: down arrow area (full-width bar below menu)
-    if (game.settingsScrollOffset < maxScroll && cy > startY + visibleH && cy <= startY + visibleH + rowH) {
-      game.settingsScrollOffset = Math.min(maxScroll, game.settingsScrollOffset + 1);
-      return;
-    }
-
-    // Settings row taps — iterate only visible items
-    for (let i = 0; i < itemCount; i++) {
-      const visIndex = i - game.settingsScrollOffset;
-      if (visIndex < 0 || visIndex >= SETTINGS_VISIBLE_ROWS) continue;
-
-      const y = startY + visIndex * (rowH + rowGap);
-      const itemName = getSettingsItemName(i);
-
-      if (itemName === 'back') {
-        const bw = 120;
-        const bx = CANVAS_WIDTH / 2 - bw / 2;
-        if (cx >= bx && cx <= bx + bw && cy >= y && cy <= y + rowH) {
-          game.settingsIndex = i;
-          handleSettingsKey('Enter');
-          return;
-        }
-        continue;
-      }
-
-      if (cy >= y && cy <= y + rowH) {
-        game.settingsIndex = i;
-        const leftArrowX = rowX + rowW - 200;
-        const rightArrowX = rowX + rowW - arrowW - 4;
-
-        // Left arrow — 44px hit area centered on visual arrow
-        const leftHitX = leftArrowX - (hitSize - arrowW) / 2;
-        const arrowCenterY = y + rowH / 2;
-        if (cx >= leftHitX && cx <= leftHitX + hitSize &&
-            cy >= arrowCenterY - hitSize / 2 && cy <= arrowCenterY + hitSize / 2) {
-          handleSettingsKey('ArrowLeft');
-          return;
-        }
-        // Right arrow — 44px hit area centered on visual arrow
-        const rightHitX = rightArrowX - (hitSize - arrowW) / 2;
-        if (cx >= rightHitX && cx <= rightHitX + hitSize &&
-            cy >= arrowCenterY - hitSize / 2 && cy <= arrowCenterY + hitSize / 2) {
-          handleSettingsKey('ArrowRight');
-          return;
-        }
-
-        // Custom gravity — tap value area to focus hidden input
-        if (itemName === 'customGravity') {
-          const gravInput = document.getElementById('custom-gravity-input');
-          if (gravInput) {
-            gravInput.value = game.customGravityInput;
-            gravInput.focus();
-            gravInput.oninput = () => {
-              game.customGravityInput = gravInput.value;
-              const parsed = parseFloat(gravInput.value);
-              if (!isNaN(parsed) && parsed >= 0.1) {
-                settings.customGravity = parsed;
-              }
-            };
-            gravInput.onblur = () => {
-              const parsed = parseFloat(gravInput.value);
-              if (!isNaN(parsed) && parsed >= 0.1) {
-                settings.customGravity = parsed;
-              }
-              game.customGravityInput = String(settings.customGravity);
-              saveSettings(settings);
-              gravInput.oninput = null;
-              gravInput.onblur = null;
-            };
-          }
-          return;
-        }
-        break;
-      }
-    }
+    handleMenuClick(cx, cy, {
+      getItemCount: getSettingsItemCount,
+      getItemName: getSettingsItemName,
+      getIndex: () => game.settingsIndex,
+      setIndex: (i) => { game.settingsIndex = i; },
+      getScroll: () => game.settingsScrollOffset,
+      setScroll: (v) => { game.settingsScrollOffset = v; },
+      onBottomButton: () => handleSettingsKey('Enter'),
+      onKey: handleSettingsKey,
+    });
   }
 
   // Fire button click
